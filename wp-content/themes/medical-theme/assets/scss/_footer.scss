@@ -1,0 +1,141 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Footer
+.site-footer {
+    background-color: #e9ebfe;
+    color: $text-body;
+    padding: 80px 0 30px;
+    font-family: $font-body;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 60px;
+    margin-bottom: 60px;
+
+    @include respond-to(tablet) {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+}
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+
+    .logo-icon {
+        font-size: 24px;
+    }
+
+    .logo-text {
+        font-family: $font-heading;
+        font-size: 22px;
+        font-weight: 700;
+        color: $primary-color;
+    }
+}
+
+.footer-tagline {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 25px;
+    color: #5A5A5A;
+}
+
+.footer-social {
+    display: flex;
+    gap: 15px;
+}
+
+.social-icon {
+    color: $primary-color;
+    text-decoration: none;
+    font-size: 0.85rem;
+    padding: 8px 15px;
+    background: rgba(97, 94, 252, 0.08);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+
+    &:hover {
+        background: $primary-color;
+        color: $white;
+        transform: translateY(-3px);
+    }
+}
+
+.footer-title {
+    color: $text-heading;
+    font-size: 18px;
+    margin-bottom: 25px;
+    position: relative;
+    font-weight: 700;
+}
+
+.footer-links,
+.footer-contact {
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+}
+
+.footer-links {
+    li {
+        margin-bottom: 12px;
+    }
+
+    a {
+        color: #6A6A6A;
+        text-decoration: none;
+        transition: color 0.3s ease;
+
+        &:hover {
+            color: $primary-color;
+        }
+    }
+}
+
+.contact-list li {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    color: #6A6A6A;
+}
+
+.footer-bottom {
+    padding-top: 30px;
+    border-top: 1px solid rgba(97, 94, 252, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #808080;
+
+    @include respond-to(tablet) {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+}
+
+.footer-legal a {
+    color: #808080;
+    text-decoration: none;
+    margin-left: 20px;
+
+    &:hover {
+        color: $primary-color;
+    }
+}

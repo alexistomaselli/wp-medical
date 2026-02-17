@@ -1,0 +1,51 @@
+@use 'variables' as *;
+
+// Mixin para breakpoints responsivos
+@mixin respond-to($breakpoint) {
+    @if $breakpoint ==tablet {
+        @media (max-width: $breakpoint-tablet) {
+            @content;
+        }
+    }
+
+    @else if $breakpoint ==mobile {
+        @media (max-width: $breakpoint-mobile) {
+            @content;
+        }
+    }
+}
+
+// Mixin para buttons
+@mixin button-base {
+    background-color: $primary-color;
+    color: $white;
+    padding: 12px 28px;
+    border-radius: $border-radius;
+    border: none;
+    font-family: $font-heading;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+
+    &:hover {
+        background-color: $primary-hover;
+        transform: translateY(-2px);
+        box-shadow: $shadow-hover;
+    }
+}
+
+// Font family mixins
+@mixin rubik {
+    font-family: $font-body;
+}
+
+@mixin poppins {
+    font-family: $font-heading;
+}
+
+@mixin manrope {
+    font-family: $font-accent;
+}

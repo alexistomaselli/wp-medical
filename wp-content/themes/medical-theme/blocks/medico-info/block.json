@@ -1,0 +1,23 @@
+{
+    "name": "acf/medico-info",
+    "title": "Ficha de Médico",
+    "description": "Muestra la información detallada de un médico.",
+    "style": "file:./medico-info.css",
+    "category": "formatting",
+    "icon": "id-alt",
+    "keywords": [
+        "medico",
+        "doctor",
+        "medical"
+    ],
+    "acf": {
+        "mode": "preview",
+        "renderTemplate": "medico-info.php"
+    },
+    "supports": {
+        "align": true,
+        "html": false,
+        "mode": true,
+        "jsx": true
+    }
+}

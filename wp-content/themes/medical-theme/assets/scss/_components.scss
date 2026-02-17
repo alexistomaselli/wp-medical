@@ -1,0 +1,16 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Buttons
+.btn-primary,
+.button,
+button,
+input[type="submit"],
+.view-profile {
+    @include button-base;
+    // Los !important se mantienen por compatibilidad con WordPress
+    background-color: $primary-color;
+    color: $white;
+    border: none;
+    text-decoration: none;
+}

@@ -1,0 +1,477 @@
+// Booking System Styles
+.booking-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.booking-layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 30px;
+    align-items: start;
+
+    @media (max-width: 968px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.booking-main {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+}
+
+.booking-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #1a1a1a;
+}
+
+.booking-description {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+// Tabs
+.booking-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.booking-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #666;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+        color: #6366f1;
+    }
+
+    &.active {
+        color: #6366f1;
+        border-bottom-color: #6366f1;
+    }
+
+    .dashicons {
+        width: 20px;
+        height: 20px;
+        font-size: 20px;
+    }
+}
+
+.booking-tab-content {
+    display: none;
+
+    &.active {
+        display: block;
+    }
+}
+
+// Sections
+.booking-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+
+    .dashicons {
+        color: #6366f1;
+    }
+}
+
+// Calendar
+#booking-calendar {
+    background: white;
+    border-radius: 8px;
+
+    // Flatpickr inline calendar overrides - using higher specificity (ID + Class)
+    .flatpickr-calendar.inline {
+        box-shadow: none;
+        width: 100%;
+        max-width: none;
+
+        .flatpickr-months {
+            padding: 10px 0;
+        }
+
+        .flatpickr-weekdays,
+        .flatpickr-days {
+            width: 100%;
+        }
+
+        .flatpickr-day {
+            max-width: none;
+            height: 45px;
+            line-height: 45px;
+            border-radius: 8px;
+
+            &.selected,
+            &.selected:hover {
+                background: #6366f1;
+                border-color: #6366f1;
+            }
+
+            &.today {
+                border-color: #6366f1;
+
+                &:hover {
+                    background: #f0f0ff;
+                }
+            }
+
+            &:hover:not(.selected):not(.disabled) {
+                background: #f8f9fa;
+                border-color: #e0e0e0;
+            }
+
+            &.disabled {
+                color: #ccc;
+            }
+        }
+    }
+}
+
+// Time Slots
+#booking-slots {
+    .placeholder-text {
+        text-align: center;
+        color: #999;
+        padding: 40px;
+        font-size: 14px;
+    }
+}
+
+.slot-section {
+    margin-bottom: 25px;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.slot-period-title {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 15px;
+    letter-spacing: 0.5px;
+}
+
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+}
+
+.time-slot {
+    padding: 12px;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover:not(.disabled) {
+        border-color: #6366f1;
+        background: #f0f0ff;
+        transform: translateY(-2px);
+    }
+
+    &.selected {
+        background: #6366f1;
+        border-color: #6366f1;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    &.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}
+
+// Patient Form
+.patient-form {
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+
+        // Remove WooCommerce pseudo-elements that interfere with grid
+        &.form-row::before,
+        &.form-row::after {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        // Full width fields
+        &.full-width {
+            grid-template-columns: 1fr;
+        }
+
+        // Field Styling (Nested for higher specificity: 0-3-1)
+        .form-field {
+            display: flex;
+            flex-direction: column;
+
+            label {
+                margin-bottom: 12px;
+                font-weight: 700;
+                color: #1e293b;
+                font-size: 15px;
+                letter-spacing: -0.2px;
+
+                .required {
+                    color: #ef4444;
+                    margin-left: 2px;
+                }
+            }
+
+            input,
+            select,
+            textarea {
+                width: 100%;
+                height: auto;
+                min-height: 54px;
+                padding: 14px 20px;
+                border-radius: 16px;
+                border: 1px solid #e2e8f0;
+                background: #fff;
+                font-size: 15px;
+                color: #1e293b;
+                transition: all 0.3s ease;
+                outline: none;
+                box-sizing: border-box;
+                font-family: inherit;
+
+                &:focus {
+                    border-color: #6366f1;
+                    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+                }
+
+                &::placeholder {
+                    color: #94a3b8;
+                }
+            }
+
+            // Custom select styling
+            select {
+                appearance: none;
+                -webkit-appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 15px center;
+                background-size: 18px;
+                padding-right: 45px;
+                cursor: pointer;
+
+                &:hover {
+                    border-color: #cbd5e1;
+                }
+            }
+
+            textarea {
+                resize: none;
+                min-height: 120px;
+                line-height: 1.6;
+            }
+        }
+    }
+}
+
+
+// Confirm Button
+.btn-confirm-booking {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover:not(:disabled) {
+        background: #4f46e5;
+        transform: translateY(-2px);
+    }
+
+    &:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .dashicons {
+        width: 20px;
+        height: 20px;
+        font-size: 20px;
+    }
+}
+
+// Sidebar Summary
+.booking-sidebar {
+    position: sticky;
+    top: 80px;
+}
+
+.booking-summary-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+}
+
+.summary-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+}
+
+.doctor-info {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 20px;
+
+    .doctor-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .doctor-details {
+        flex: 1;
+    }
+
+    .doctor-name {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        color: #1a1a1a;
+    }
+
+    .doctor-specialty {
+        font-size: 14px;
+        color: #666;
+        margin: 0;
+    }
+}
+
+.summary-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px 0;
+    border-bottom: 1px solid #f0f0f0;
+
+    .dashicons {
+        color: #6366f1;
+        margin-top: 2px;
+    }
+
+    .summary-details {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .summary-label {
+        font-size: 12px;
+        color: #999;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .summary-value {
+        font-size: 14px;
+        color: #333;
+        font-weight: 600;
+    }
+}
+
+.summary-price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    margin-top: 10px;
+    border-top: 2px solid #f0f0f0;
+
+    .price-label {
+        font-size: 16px;
+        font-weight: 400;
+        color: #666;
+    }
+
+    .price-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #6366f1;
+    }
+}
+
+.summary-help {
+    background: #f0f0ff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+
+    p {
+        margin: 0 0 8px;
+        font-size: 13px;
+        color: #666;
+
+        &:last-child {
+            margin: 0;
+        }
+
+        strong {
+            color: #333;
+        }
+    }
+}

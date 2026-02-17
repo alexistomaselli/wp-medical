@@ -1,0 +1,24 @@
+/*
+Theme Name: Medical Custom
+Theme URI: https://alexis.dydlabs.com/
+Author: Alexis Tomaselli
+Author URI: https://alexis.dydlabs.com/
+Description: Custom theme for Medical semi-senior technical test simulation.
+Version: 1.0.0
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: medical-theme
+*/
+
+// Imports
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'base';
+@use 'components';
+@use 'header';
+@use 'footer';
+@use 'booking';
+@use 'woocommerce';
+@use 'cart';
+@use 'checkout';
+@use 'thankyou';
