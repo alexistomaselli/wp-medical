@@ -158,8 +158,8 @@
                                     doctors.forEach(doc => {
                                         cardsHtml += `
                                             <div style="display: flex; align-items: center; background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); padding: 10px; border: 1px solid #eee; gap: 12px; transition: background 0.2s;">
-                                                <div style="flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 2px solid #f0f0f5;">
-                                                     <img src="${doc.foto}" alt="${doc.nombre}" style="width: 100%; height: 100%; object-fit: cover; object-position: top center;">
+                                                <div style="flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 2px solid #f0f0f5; background-color: #f9f9fb;">
+                                                     <img src="${doc.foto}" alt="${doc.nombre}" style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
                                                 </div>
                                                 <div style="flex: 1; min-width: 0; text-align: left;">
                                                     <h3 style="margin: 0 0 3px; color: #222; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${doc.nombre}</h3>
@@ -171,8 +171,8 @@
                                                         <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;">• ${doc.sede}</span>
                                                     </div>
                                                 </div>
-                                                <a href="${doc.link}" target="_blank" style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #f0f4ff; color: #4353ff; border-radius: 50%; text-decoration: none; font-size: 18px; line-height: 1; transition: all 0.2s;">
-                                                    <span style="display: block; margin-top: -2px;">→</span>
+                                                <a href="${doc.link}" target="_blank" style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #f0f4ff; color: #4353ff; border-radius: 50%; text-decoration: none; font-size: 16px; font-weight: bold; transition: all 0.2s;">
+                                                    ➝
                                                 </a>
                                             </div>
                                         `;
