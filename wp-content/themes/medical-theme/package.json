@@ -1,0 +1,17 @@
+{
+    "name": "medical-theme",
+    "version": "1.0.0",
+    "description": "WordPress theme with Vite + SCSS",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+    "devDependencies": {
+        "browser-sync": "^3.0.4",
+        "chokidar": "^5.0.0",
+        "sass": "^1.77.0",
+        "vite": "^5.2.0",
+        "vite-plugin-live-reload": "^3.0.5"
+    }
+}
