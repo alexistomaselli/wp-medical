@@ -258,18 +258,50 @@ require get_template_directory() . '/inc/customizer.php';
 
 
 /**
-* Enqueue WebMCP Tool Scripts
-*/
-function medical_enqueue_webmcp() {
-// Only load if not in admin
-if (!is_admin()) {
-wp_enqueue_script(
-'medical-webmcp',
-get_template_directory_uri() . '/assets/js/webmcp.js',
-array(),
-'1.0.0',
-true
-);
-}
+ * Enqueue WebMCP Tool Scripts
+ */
+function medical_enqueue_webmcp()
+{
+    // Only load if not in admin
+    if (!is_admin()) {
+        wp_enqueue_script(
+            'medical-webmcp',
+            get_template_directory_uri() . '/assets/js/webmcp.js',
+            array(),
+            '1.0.0',
+            true
+        );
+    }
 }
 add_action('wp_enqueue_scripts', 'medical_enqueue_webmcp');
+
+/**
+ * SECURITY: WordPress Hardening
+ */
+
+// 1. Desactivar el enumerado de usuarios (REST API)
+add_filter('rest_endpoints', function ($endpoints) {
+    if (isset($endpoints['/wp/v2/users'])) {
+        unset($endpoints['/wp/v2/users']);
+    }
+    if (isset($endpoints['/wp/v2/users/(?P<id>[\d]+)'])) {
+        unset($endpoints['/wp/v2/users/(?P<id>[\d]+)']);
+    }
+    return $endpoints;
+});
+
+// 2. Remover versión de WordPress de los headers y feeds
+function medical_remove_version()
+{
+    return '';
+}
+add_filter('the_generator', 'medical_remove_version');
+
+// 3. Desactivar XML-RPC
+add_filter('xmlrpc_enabled', '__return_false');
+
+// 4. Desactivar links X-Pingback en los headers
+add_filter('wp_headers', function ($headers) {
+    unset($headers['X-Pingback']);
+    return $headers;
+});
