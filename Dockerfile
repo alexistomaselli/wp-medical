@@ -1,19 +1,19 @@
 
 FROM wordpress:latest
 
-# Copiar el contenido de wp-content personalizado
-COPY wp-content/ /var/www/html/wp-content/
+# Copiar el contenido de wp-content personalizado a una ubicación temporal para "seeding"
+# Esto es necesario porque EasyPanel monta un volumen en /var/www/html/wp-content que oculta los archivos de la imagen
+COPY wp-content/ /usr/src/user_wp_content/
 
-# Crear copia de seguridad de uploads para inicializar el volumen
-RUN mkdir -p /usr/src/uploads_seed && \
-    cp -r /var/www/html/wp-content/uploads/* /usr/src/uploads_seed/ || true
+# Copiar también al destino estándar por si acaso no hay volumen montado (fallback)
+COPY wp-content/ /var/www/html/wp-content/
 
 # Copiar script de inicialización
 COPY init-uploads.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/init-uploads.sh
 
-# Asegurar permisos correctos en el directorio web
-RUN chown -R www-data:www-data /var/www/html/wp-content
+# Asegurar permisos correctos en el directorio seed
+RUN chown -R www-data:www-data /usr/src/user_wp_content
 
 # Usar script personalizado como Entrypoint
 ENTRYPOINT ["init-uploads.sh"]
