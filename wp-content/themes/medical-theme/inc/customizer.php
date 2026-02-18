@@ -15,21 +15,33 @@ function medical_customize_register($wp_customize)
         'description' => __('Opciones personalizadas para la página de inicio del tema Medical.', 'medical-theme'),
     ));
 
-    // Video URL Setting
+    // Video desde Biblioteca de Medios
     $wp_customize->add_setting('medical_video_promocional', array(
         'default' => '',
         'transport' => 'refresh',
         'sanitize_callback' => 'esc_url_raw',
     ));
-
-    // Video Upload Control
     $wp_customize->add_control(new WP_Customize_Upload_Control($wp_customize, 'medical_video_promocional', array(
-        'label' => __('Video Promocional', 'medical-theme'),
-        'description' => __('Selecciona un video (MP4) para mostrar en el modal de la página de inicio.', 'medical-theme'),
+        'label' => __('Video Promocional (Biblioteca)', 'medical-theme'),
+        'description' => __('Subí un MP4 desde la biblioteca de medios. Máx. 2MB según configuración del servidor.', 'medical-theme'),
         'section' => 'medical_theme_options',
         'settings' => 'medical_video_promocional',
         'mime_type' => 'video',
     )));
+
+    // Video URL Externa (Cloudinary, Google Drive, YouTube, Vimeo, etc.)
+    $wp_customize->add_setting('medical_video_url_externa', array(
+        'default' => '',
+        'transport' => 'refresh',
+        'sanitize_callback' => 'esc_url_raw',
+    ));
+    $wp_customize->add_control('medical_video_url_externa', array(
+        'label' => __('Video URL Externa ⭐ (recomendado)', 'medical-theme'),
+        'description' => __('Pegá una URL directa de video MP4 (Cloudinary, Google Drive) o un link de YouTube/Vimeo. Esta opción tiene prioridad sobre la biblioteca.', 'medical-theme'),
+        'section' => 'medical_theme_options',
+        'settings' => 'medical_video_url_externa',
+        'type' => 'url',
+    ));
 
     // Video Poster Setting
     $wp_customize->add_setting('medical_video_poster', array(

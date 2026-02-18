@@ -22,7 +22,11 @@ get_header();
                     <a href="<?php echo esc_url(home_url('/medicos/')); ?>" class="btn-primary">Ver Staff
                         Médico</a>
                     <?php
-                    $video_url = function_exists('get_field') ? get_field('video_promocional', 'option') : '';
+                    // Prioridad: 1) URL externa del customizer, 2) ACF, 3) Biblioteca de medios
+                    $video_url = get_theme_mod('medical_video_url_externa');
+                    if (!$video_url) {
+                        $video_url = function_exists('get_field') ? get_field('video_promocional', 'option') : '';
+                    }
                     if (!$video_url) {
                         $video_url = get_theme_mod('medical_video_promocional');
                     }
@@ -259,20 +263,41 @@ get_header();
 <?php if ($video_url):
     $video_poster = get_theme_mod('medical_video_poster');
     $video_autoplay = get_theme_mod('medical_video_autoplay', 'none');
+
+    // Detectar si es YouTube o Vimeo para usar iframe embed
+    $is_youtube = preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/', $video_url, $yt_matches);
+    $is_vimeo = preg_match('/vimeo\.com\/(\d+)/', $video_url, $vm_matches);
+
+    if ($is_youtube) {
+        $embed_url = 'https://www.youtube.com/embed/' . $yt_matches[1] . '?rel=0&enablejsapi=1';
+    } elseif ($is_vimeo) {
+        $embed_url = 'https://player.vimeo.com/video/' . $vm_matches[1] . '?dnt=1';
+    } else {
+        $embed_url = ''; // URL directa de MP4
+    }
     ?>
     <div id="medical-video-modal" class="medical-modal-backdrop" data-autoplay="<?php echo esc_attr($video_autoplay); ?>">
         <div class="medical-modal-content">
             <button class="medical-modal-close" aria-label="Cerrar">&times;</button>
-            <button class="medical-modal-play-btn" aria-label="Reproducir">
-                <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 5V19L19 12L8 5Z" />
-                </svg>
-            </button>
-            <video controls <?php if ($video_poster)
-                echo 'poster="' . esc_url($video_poster) . '"'; ?>>
-                <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
-                Tu navegador no soporta el tag de video.
-            </video>
+
+            <?php if ($embed_url): ?>
+                <!-- YouTube / Vimeo embed -->
+                <iframe id="medical-video-iframe" src="" data-src="<?php echo esc_url($embed_url); ?>" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen style="width:100%;aspect-ratio:16/9;border-radius:12px;"></iframe>
+            <?php else: ?>
+                <!-- URL directa de video (MP4, Cloudinary, etc.) -->
+                <button class="medical-modal-play-btn" aria-label="Reproducir">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 5V19L19 12L8 5Z" />
+                    </svg>
+                </button>
+                <video controls <?php if ($video_poster)
+                    echo 'poster="' . esc_url($video_poster) . '"'; ?>>
+                    <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
+                    Tu navegador no soporta el tag de video.
+                </video>
+            <?php endif; ?>
         </div>
     </div>
 <?php endif; ?>

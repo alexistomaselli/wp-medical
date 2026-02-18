@@ -2,46 +2,55 @@ document.addEventListener('DOMContentLoaded', function () {
     const videoModal = document.getElementById('medical-video-modal');
     if (!videoModal) return;
 
-    const modalContent = videoModal.querySelector('.medical-modal-content');
-    const modalBackdrop = videoModal.parentElement; // Assuming container is backdrop
     const closeBtn = videoModal.querySelector('.medical-modal-close');
     const video = videoModal.querySelector('video');
+    const iframe = videoModal.querySelector('#medical-video-iframe');
     const playBtn = videoModal.querySelector('.medical-modal-play-btn');
 
+    // ── Botón play para video nativo ─────────────────────────────────────────
     if (playBtn && video) {
         playBtn.addEventListener('click', function () {
             video.play();
         });
-
-        video.addEventListener('play', function () {
-            playBtn.classList.add('is-hidden');
-        });
-
-        video.addEventListener('pause', function () {
-            playBtn.classList.remove('is-hidden');
-        });
-
-        video.addEventListener('ended', function () {
-            playBtn.classList.remove('is-hidden');
-        });
+        video.addEventListener('play', () => playBtn.classList.add('is-hidden'));
+        video.addEventListener('pause', () => playBtn.classList.remove('is-hidden'));
+        video.addEventListener('ended', () => playBtn.classList.remove('is-hidden'));
     }
 
-    // Find trigger buttons - could be multiple
-    const triggerBtns = document.querySelectorAll('.js-open-video-modal');
-
+    // ── Abrir modal ──────────────────────────────────────────────────────────
     function openModal(e) {
         if (e) e.preventDefault();
         videoModal.classList.add('is-visible');
+        document.body.style.overflow = 'hidden';
+
         if (video) {
             video.currentTime = 0;
             video.play();
         }
-        document.body.style.overflow = 'hidden'; // Prevent scroll
+
+        // Cargar iframe solo al abrir (evita autoplay antes de tiempo)
+        if (iframe && !iframe.src) {
+            iframe.src = iframe.dataset.src;
+        }
     }
 
-    // Check for autoplay behavior
-    const autoplayBehavior = videoModal.getAttribute('data-autoplay');
+    // ── Cerrar modal ─────────────────────────────────────────────────────────
+    function closeModal() {
+        videoModal.classList.remove('is-visible');
+        document.body.style.overflow = '';
 
+        if (video) {
+            video.pause();
+        }
+
+        // Detener iframe vaciando el src (pausa YouTube/Vimeo)
+        if (iframe) {
+            iframe.src = '';
+        }
+    }
+
+    // ── Autoplay behavior ────────────────────────────────────────────────────
+    const autoplayBehavior = videoModal.getAttribute('data-autoplay');
     if (autoplayBehavior === 'always') {
         openModal();
     } else if (autoplayBehavior === 'once') {
@@ -51,16 +60,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-
-    function closeModal() {
-        videoModal.classList.remove('is-visible');
-        if (video) {
-            video.pause();
-        }
-        document.body.style.overflow = '';
-    }
-
-    triggerBtns.forEach(btn => {
+    // ── Triggers ─────────────────────────────────────────────────────────────
+    document.querySelectorAll('.js-open-video-modal').forEach(btn => {
         btn.addEventListener('click', openModal);
     });
 
@@ -68,14 +69,12 @@ document.addEventListener('DOMContentLoaded', function () {
         closeBtn.addEventListener('click', closeModal);
     }
 
-    // Close on click outside (backdrop)
+    // Cerrar al hacer click en el backdrop
     videoModal.addEventListener('click', function (e) {
-        if (e.target === videoModal) {
-            closeModal();
-        }
+        if (e.target === videoModal) closeModal();
     });
 
-    // Close on Escape key
+    // Cerrar con Escape
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && videoModal.classList.contains('is-visible')) {
             closeModal();
