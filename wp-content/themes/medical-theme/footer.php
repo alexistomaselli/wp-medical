@@ -7,7 +7,8 @@
                     <span class="logo-icon">🏥</span>
                     <span class="logo-text">Medical</span>
                 </div>
-                <p class="footer-tagline">Tecnología médica avanzada con un enfoque humano. Cuidamos lo que más importa.</p>
+                <p class="footer-tagline">Tecnología médica avanzada con un enfoque humano. Cuidamos lo que más importa.
+                </p>
                 <div class="footer-social">
                     <a href="#" class="social-icon">Instagram</a>
                     <a href="#" class="social-icon">LinkedIn</a>
@@ -39,7 +40,10 @@
 
         <div class="footer-bottom">
             <div class="site-info">
-                &copy; <?php echo date('Y'); ?> Medical Medical Center. Todos los derechos reservados.
+                &copy; <?php echo date('Y'); ?> Medical Center. Todos los derechos reservados.
+            </div>
+            <div class="footer-developer">
+                Diseñado por <a href="https://alexis.dydlabs.com/" target="_blank" rel="noopener">Alexis</a>
             </div>
             <div class="footer-legal">
                 <a href="#">Privacidad</a>

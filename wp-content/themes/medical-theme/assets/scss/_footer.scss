@@ -130,6 +130,38 @@
     }
 }
 
+.footer-developer {
+    font-weight: 500;
+    color: #808080;
+
+    a {
+        color: $primary-color;
+        text-decoration: none;
+        font-weight: 700;
+        position: relative;
+        transition: all 0.3s ease;
+
+        &:after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: $primary-color;
+            transition: width 0.3s ease;
+        }
+
+        &:hover {
+            color: darken($primary-color, 10%);
+
+            &:after {
+                width: 100%;
+            }
+        }
+    }
+}
+
 .footer-legal a {
     color: #808080;
     text-decoration: none;

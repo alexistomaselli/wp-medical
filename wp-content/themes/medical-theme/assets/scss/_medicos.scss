@@ -1,0 +1,594 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.medico-archive-container {
+    background: #f8f8ff; // Fondo solicitado
+}
+
+// Hero Section
+.medico-archive-hero {
+    position: relative;
+    padding: 60px 0 20px;
+    overflow: hidden;
+    text-align: center;
+
+    .hero-bg-elements {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+
+        .element-1 {
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 500px;
+            height: 500px;
+            background: rgba($primary-color, 0.05);
+            border-radius: 50%;
+            filter: blur(100px);
+        }
+
+        .element-2 {
+            position: absolute;
+            bottom: -100px;
+            left: -100px;
+            width: 400px;
+            height: 400px;
+            background: rgba($primary-color, 0.08);
+            border-radius: 50%;
+            filter: blur(80px);
+        }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba($primary-color, 0.1);
+            color: $primary-color;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            margin-bottom: 30px;
+            @include poppins;
+        }
+
+        .hero-title {
+            font-size: 3.2rem;
+            font-weight: 800;
+            line-height: 1.1;
+            color: $text-heading;
+            letter-spacing: -1.5px;
+            margin-bottom: 25px;
+            @include poppins;
+
+            .highlight {
+                color: $primary-color;
+                font-style: italic;
+            }
+
+            @media (max-width: $breakpoint-tablet) {
+                font-size: 2.5rem;
+            }
+        }
+    }
+
+    .hero-stats {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+
+        .stat-card {
+            background: rgba($white, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 16px 24px;
+            border-radius: 20px;
+            border: 1px solid rgba($white, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-top: 2px solid rgba($primary-color, 0.2);
+
+            .stat-icon {
+                width: 56px;
+                height: 56px;
+                background: rgba($primary-color, 0.1);
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: $primary-color;
+
+                span {
+                    font-size: 32px;
+                }
+            }
+
+            .stat-info {
+                text-align: left;
+
+                .stat-number {
+                    display: block;
+                    font-size: 24px;
+                    font-weight: 800;
+                    color: $text-heading;
+                    line-height: 1;
+                    margin-bottom: 4px;
+                    @include poppins;
+                }
+
+                .stat-label {
+                    font-size: 11px;
+                    font-weight: 700;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+            }
+        }
+    }
+}
+
+// Filters Section
+.medico-filters-section {
+    position: relative;
+    z-index: 10;
+    margin-top: -30px;
+    margin-bottom: 10px;
+}
+
+.medico-filters-wrapper {
+    background: $white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f1f5f9;
+
+    form {
+        display: grid;
+        grid-template-columns: 2fr 1.5fr 1.5fr 1fr;
+        gap: 20px;
+        align-items: flex-end;
+
+        @media (max-width: $breakpoint-tablet) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+
+        label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-left: 15px;
+            @include poppins;
+        }
+
+        .input-with-icon,
+        .select-with-icon {
+            position: relative;
+
+            span {
+                position: absolute;
+                left: 18px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #94a3b8;
+                font-size: 20px;
+                pointer-events: none;
+            }
+
+            input,
+            select {
+                width: 100%;
+                padding: 14px 20px 14px 50px;
+                border-radius: 50px;
+                border: 1px solid #e2e8f0;
+                background: #fff;
+                color: $text-heading;
+                font-family: $font-body;
+                font-size: 14px;
+                outline: none;
+                transition: all 0.3s ease;
+
+                &:focus {
+                    border-color: $primary-color;
+                    box-shadow: 0 0 0 4px rgba($primary-color, 0.1);
+                }
+            }
+        }
+
+        .select-with-icon {
+            select {
+                appearance: none;
+            }
+
+            span:last-child {
+                left: auto;
+                right: 18px;
+            }
+        }
+    }
+
+    .filter-submit {
+        button {
+            width: 100%;
+            height: 52px;
+            background: $primary-color;
+            color: $white;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            @include poppins;
+
+            &:hover {
+                background: $primary-hover;
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba($primary-color, 0.3);
+            }
+        }
+    }
+}
+
+.active-filter-pill {
+    margin-top: 30px;
+    background: #eff6ff;
+    padding: 12px 30px;
+    border-radius: 15px;
+    border: 1px solid rgba($primary-color, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    p {
+        margin: 0;
+        font-size: 14px;
+        color: #475569;
+
+        strong {
+            color: $primary-color;
+        }
+    }
+
+    .clear-filters {
+        font-size: 11px;
+        font-weight: 800;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.3s ease;
+
+        span {
+            font-size: 16px;
+        }
+
+        &:hover {
+            color: $primary-color;
+        }
+    }
+}
+
+// Grid & Cards
+.medico-grid-section {
+    padding: 0 0 80px;
+    margin-top: -20px; // Pull the grid up towards the filters
+}
+
+.medico-grid-archive {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+
+    @media (max-width: $breakpoint-tablet) {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+}
+
+.doctor-card {
+    background: #ffffff; // Card blanco puro
+    padding: 20px;
+    border-radius: 30px; // Un poco más redondeado como Jenkins
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03);
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    border: 1px solid transparent;
+    display: flex;
+    flex-direction: column;
+
+    &:hover {
+        transform: translateY(-8px);
+        border-color: rgba($primary-color, 0.1);
+        box-shadow: 0 25px 60px rgba($primary-color, 0.1);
+
+        .doctor-image-wrapper img {
+            transform: scale(1.05);
+        }
+    }
+
+    .doctor-image-wrapper {
+        position: relative;
+        overflow: hidden;
+        border-radius: 20px; // Más redondeado
+        margin-bottom: 24px;
+        height: 280px;
+
+        .doctor-image {
+            display: block;
+            width: 100%;
+            height: 100%;
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.6s ease;
+            }
+        }
+
+        .availability-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ffffff;
+            border-radius: 50px;
+            padding: 6px 16px;
+            font-size: 10px;
+            font-weight: 800;
+            color: $primary-color;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            z-index: 2;
+        }
+    }
+
+    .doctor-info {
+        text-align: center;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 10px;
+
+        h3 {
+            font-size: 1.45rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: $text-heading;
+            @include poppins;
+            letter-spacing: -0.5px;
+
+            a {
+                text-decoration: none;
+                color: inherit;
+            }
+        }
+
+        .specialty {
+            color: $primary-color;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.8px;
+            margin-bottom: 30px;
+            @include rubik;
+        }
+
+        .view-profile-btn {
+            margin: auto auto 0;
+            width: fit-content;
+            background: #ffffff; // Fondo blanco solicitado
+            color: $primary-color;
+            padding: 16px 45px; // Más espaciado lateral
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            @include poppins;
+
+            span {
+                font-size: 18px;
+            }
+
+            &:hover {
+                background: $primary-color;
+                color: $white;
+                box-shadow: 0 10px 25px rgba($primary-color, 0.2);
+                transform: translateY(-2px);
+            }
+        }
+    }
+}
+
+// Pagination
+.archive-pagination {
+    margin-top: 60px;
+
+    .nav-links {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+
+        .page-numbers {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: $white;
+            color: $text-heading;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.02);
+
+            &.current {
+                background: $primary-color;
+                color: $white;
+            }
+
+            &:hover:not(.current) {
+                background: #f1f5f9;
+                color: $primary-color;
+            }
+
+            span {
+                font-size: 20px;
+            }
+        }
+    }
+}
+
+// CTA Section
+.medico-cta-section {
+    position: relative;
+    background: rgba($primary-color, 0.05);
+    padding: 100px 0;
+    overflow: hidden;
+    text-align: center;
+    border-top: 1px solid rgba($primary-color, 0.05);
+
+    .cta-content {
+        position: relative;
+        z-index: 10;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 20px;
+
+        .cta-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            color: $text-heading;
+            margin-bottom: 30px;
+            @include poppins;
+            letter-spacing: -1.5px;
+
+            @media (max-width: $breakpoint-tablet) {
+                font-size: 2.5rem;
+            }
+        }
+
+        .cta-description {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #64748b;
+            margin-bottom: 45px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            font-weight: 500;
+            opacity: 0.9;
+            @include poppins;
+        }
+
+        .cta-actions {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+
+            .btn-primary-cta,
+            .btn-secondary-cta {
+                padding: 18px 40px;
+                border-radius: 12px;
+                font-weight: 700;
+                font-size: 16px;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                @include poppins;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+
+            .btn-primary-cta {
+                background: $primary-color;
+                color: $white;
+                box-shadow: 0 15px 30px rgba($primary-color, 0.3);
+
+                &:hover {
+                    transform: translateY(-3px);
+                    background: $primary-hover;
+                    box-shadow: 0 20px 40px rgba($primary-color, 0.4);
+                }
+            }
+
+            .btn-secondary-cta {
+                background: $white;
+                color: $text-heading;
+                color: $text-heading;
+                border: 1px solid #e2e8f0;
+
+                &:hover {
+                    transform: translateY(-3px);
+                    background: #f8fafc;
+                    border-color: #cbd5e1;
+                    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+                }
+            }
+        }
+    }
+
+    .cta-icon {
+        position: absolute;
+        font-size: 180px;
+        color: rgba($primary-color, 0.05);
+        user-select: none;
+        pointer-events: none;
+        z-index: 1;
+
+        &.icon-left {
+            top: 10%;
+            left: -30px;
+            transform: rotate(15deg);
+        }
+
+        &.icon-right {
+            bottom: 10%;
+            right: -30px;
+            transform: rotate(-15deg);
+        }
+    }
+}
+
+.no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px;
+    background: $white;
+    border-radius: 20px;
+    color: #94a3b8;
+    font-weight: 500;
+}

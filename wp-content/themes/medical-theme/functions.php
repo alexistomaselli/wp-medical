@@ -78,7 +78,12 @@ function medical_scripts()
         // Producción: cargar CSS compilado
         wp_enqueue_style('medical-theme-style', get_stylesheet_uri(), array('woocommerce-general'), $css_version);
     }
+
+    // Enqueue navigation script for mobile menu
+    wp_enqueue_script('medical-navigation', get_template_directory_uri() . '/assets/js/navigation.js', array(), $theme_version, true);
+
     // Enqueue cart script on cart page
+
     if (is_cart()) {
         wp_enqueue_script('medical-cart', get_template_directory_uri() . '/assets/js/cart.js', array('jquery'), null, true);
     }
@@ -204,3 +209,10 @@ function medical_cart_count_fragments($fragments)
     $fragments['span.cart-contents-count'] = ob_get_clean();
     return $fragments;
 }
+
+/**
+ * Desactivar el modo 'Coming Soon' de WooCommerce por defecto
+ */
+update_option('woocommerce_coming_soon', 'no');
+update_option('woocommerce_store_pages_only', 'no');
+
