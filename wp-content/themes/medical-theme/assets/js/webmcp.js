@@ -153,31 +153,27 @@
                                     result.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">No se encontraron médicos para este horario.</div>';
                                 } else {
                                     // Use simple flex column for better stacking in narrow panel
-                                    let cardsHtml = '<div style="display: flex; flex-direction: column; gap: 15px;">';
+                                    let cardsHtml = '<div style="display: flex; flex-direction: column; gap: 10px;">';
 
                                     doctors.forEach(doc => {
                                         cardsHtml += `
-                                            <div style="background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); overflow: hidden; font-family: 'Poppins', sans-serif; text-align: center; padding-bottom: 12px; border: 1px solid #eee;">
-                                                <div style="position: relative; height: 150px; overflow: hidden;">
+                                            <div style="display: flex; align-items: center; background: #fff; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); padding: 10px; border: 1px solid #eee; gap: 12px; transition: background 0.2s;">
+                                                <div style="flex-shrink: 0; width: 50px; height: 50px; border-radius: 50%; overflow: hidden; border: 2px solid #f5f5f7;">
                                                      <img src="${doc.foto}" alt="${doc.nombre}" style="width: 100%; height: 100%; object-fit: cover;">
-                                                     <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(255,255,255,0.95); color: #4353ff; padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                                        ${doc.sede}
-                                                     </div>
                                                 </div>
-                                                <div style="padding: 12px;">
-                                                    <h3 style="margin: 0 0 4px; color: #222; font-size: 15px; font-weight: 700;">${doc.nombre}</h3>
-                                                    <div style="color: #666; font-size: 11px; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">
+                                                <div style="flex: 1; min-width: 0; text-align: left;">
+                                                    <h3 style="margin: 0 0 2px; color: #222; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${doc.nombre}</h3>
+                                                    <div style="color: #666; font-size: 11px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                         ${doc.especialidad_texto}
                                                     </div>
-                                                    <div style="background: #f0f4ff; color: #4353ff; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-bottom: 10px; display: inline-block;">
-                                                        🕐 ${doc.horario}
-                                                    </div>
-                                                    <div>
-                                                        <a href="${doc.link}" target="_blank" style="display: inline-block; padding: 6px 14px; background: #4353ff; color: #fff; border-radius: 20px; text-decoration: none; font-size: 11px; font-weight: 600; transition: opacity 0.2s;">
-                                                            Ver Perfil
-                                                        </a>
+                                                    <div style="display: flex; align-items: center; gap: 6px; font-size: 10px; color: #888;">
+                                                        <span style="background: #eef2ff; color: #4353ff; padding: 1px 6px; border-radius: 6px; font-weight: 600;">${doc.horario}</span>
+                                                        <span>• ${doc.sede}</span>
                                                     </div>
                                                 </div>
+                                                <a href="${doc.link}" target="_blank" style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #f0f4ff; color: #4353ff; border-radius: 50%; text-decoration: none; font-size: 14px; font-weight: bold;">
+                                                    ➝
+                                                </a>
                                             </div>
                                         `;
                                     });
