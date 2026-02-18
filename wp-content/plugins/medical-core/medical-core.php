@@ -122,12 +122,14 @@ function medical_booking_scripts()
         }
 
         // Localize script with WooCommerce data
-        wp_localize_script('medical-booking', 'medical_booking_params', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'checkout_url' => wc_get_checkout_url(),
-            'nonce' => wp_create_nonce('medical_booking'),
-            'doctor' => $doctor_data
-        ));
+        if (function_exists('wc_get_checkout_url')) {
+            wp_localize_script('medical-booking', 'medical_booking_params', array(
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'checkout_url' => wc_get_checkout_url(),
+                'nonce' => wp_create_nonce('medical_booking'),
+                'doctor' => $doctor_data
+            ));
+        }
     }
 }
 add_action('wp_enqueue_scripts', 'medical_booking_scripts');
@@ -320,7 +322,7 @@ if (class_exists('WooCommerce')) {
     add_filter('woocommerce_checkout_get_value', 'medical_autofill_checkout_fields', 10, 2);
     function medical_autofill_checkout_fields($value, $input)
     {
-        if (is_null(WC()->cart)) {
+        if (!function_exists('WC') || is_null(WC()->cart)) {
             return $value;
         }
 
@@ -367,8 +369,12 @@ if (class_exists('WooCommerce')) {
         }
 
         // Ensure WC is loaded and cart exists
-        if (is_null(WC()->cart)) {
-            wc_load_cart();
+        if (!function_exists('WC') || is_null(WC()->cart)) {
+            if (function_exists('wc_load_cart')) {
+                wc_load_cart();
+            } else {
+                wp_send_json_error(array('message' => 'WooCommerce not loaded'));
+            }
         }
 
         // Optional: Clear cart before adding booking (common for medical appointments)

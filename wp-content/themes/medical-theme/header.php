@@ -53,16 +53,18 @@
                     </div>
                 </nav>
 
-                <div class="header-cta">
-                    <div class="header-cart">
-                        <a class="cart-customlocation" href="<?php echo wc_get_cart_url(); ?>"
-                            title="<?php _e('View your shopping cart'); ?>">
-                            <span class="dashicons dashicons-cart"></span>
-                            <span
-                                class="cart-contents-count"><?php echo WC()->cart->get_cart_contents_count(); ?></span>
-                        </a>
+                <?php if (medical_is_woocommerce_activated()): ?>
+                    <div class="header-cta">
+                        <div class="header-cart">
+                            <a class="cart-customlocation" href="<?php echo wc_get_cart_url(); ?>"
+                                title="<?php _e('View your shopping cart'); ?>">
+                                <span class="dashicons dashicons-cart"></span>
+                                <span
+                                    class="cart-contents-count"><?php echo WC()->cart->get_cart_contents_count(); ?></span>
+                            </a>
+                        </div>
                     </div>
-                </div>
+                <?php endif; ?>
             </div>
         </header>
     </div>

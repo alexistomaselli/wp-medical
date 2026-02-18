@@ -9,6 +9,31 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
+
+/**
+ * Helper function to check if WooCommerce is activated
+ */
+function medical_is_woocommerce_activated()
+{
+    return class_exists('WooCommerce');
+}
+
+/**
+ * Display admin notice if WooCommerce is not activated
+ */
+function medical_woocommerce_admin_notice()
+{
+    if (!medical_is_woocommerce_activated()) {
+        ?>
+        <div class="notice notice-error is-dismissible">
+            <p><?php _e('<strong>Medical Theme:</strong> Este tema requiere que el plugin <strong>WooCommerce</strong> esté instalado y activado para funcionar correctamente.', 'medical-theme'); ?>
+            </p>
+        </div>
+        <?php
+    }
+}
+add_action('admin_notices', 'medical_woocommerce_admin_notice');
+
 /**
  * Setup Theme
  */
@@ -83,8 +108,7 @@ function medical_scripts()
     wp_enqueue_script('medical-navigation', get_template_directory_uri() . '/assets/js/navigation.js', array(), $theme_version, true);
 
     // Enqueue cart script on cart page
-
-    if (is_cart()) {
+    if (medical_is_woocommerce_activated() && is_cart()) {
         wp_enqueue_script('medical-cart', get_template_directory_uri() . '/assets/js/cart.js', array('jquery'), null, true);
     }
 }
@@ -199,7 +223,12 @@ function medical_translate_woocommerce_strings($translated_text, $text, $domain)
 /**
  * Handle AJAX Cart Count Refresh
  */
-add_filter('woocommerce_add_to_cart_fragments', 'medical_cart_count_fragments', 10, 1);
+/**
+ * Handle AJAX Cart Count Refresh
+ */
+if (medical_is_woocommerce_activated()) {
+    add_filter('woocommerce_add_to_cart_fragments', 'medical_cart_count_fragments', 10, 1);
+}
 function medical_cart_count_fragments($fragments)
 {
     ob_start();
@@ -213,6 +242,8 @@ function medical_cart_count_fragments($fragments)
 /**
  * Desactivar el modo 'Coming Soon' de WooCommerce por defecto
  */
-update_option('woocommerce_coming_soon', 'no');
-update_option('woocommerce_store_pages_only', 'no');
+if (medical_is_woocommerce_activated()) {
+    update_option('woocommerce_coming_soon', 'no');
+    update_option('woocommerce_store_pages_only', 'no');
+}
 
