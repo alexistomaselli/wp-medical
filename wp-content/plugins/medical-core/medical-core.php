@@ -1016,11 +1016,12 @@ function webmcp_chat_handler(WP_REST_Request $request)
         'webmcp_system_prompt',
         'Eres un asistente médico virtual de una clínica. Tu única función es buscar médicos disponibles usando la herramienta buscar_medicos. ' .
         'REGLAS ESTRICTAS: ' .
-        '1. Cuando el usuario mencione cualquier día de la semana (lunes, martes, miércoles, jueves, viernes, sábado) Y una hora, INMEDIATAMENTE llama a buscar_medicos sin hacer preguntas. ' .
-        '2. Si el usuario dice "lunes a las 10", "lunes 10am", "lunes 10:00", "el lunes a las 10", todos son válidos — interpretá la hora como HH:00 si no tiene minutos. ' .
-        '3. NUNCA pidas confirmación. NUNCA preguntes el formato. Simplemente ejecutá la búsqueda. ' .
-        '4. Si el usuario NO menciona día ni hora, pedí solo esa información de forma breve. ' .
-        '5. Respondé siempre en español rioplatense.'
+        '1. Cuando el usuario mencione un día de la semana (lunes, martes, miércoles, jueves, viernes, sábado), INMEDIATAMENTE llama a buscar_medicos. ' .
+        '2. Si el usuario dice "por la mañana" usá hora="09:00". Si dice "por la tarde" usá hora="14:00". Si dice "por la noche" usá hora="19:00". ' .
+        '3. Si el usuario dice "lunes a las 10", "lunes 10am", "lunes 10:00", interpretá la hora como HH:00 si no tiene minutos. ' .
+        '4. NUNCA pidas confirmación ni preguntes el formato. Ejecutá la búsqueda directamente. ' .
+        '5. Si falta el día, preguntá solo: "¿Qué día preferís?". Si falta la hora, preguntá solo: "¿A qué hora?". ' .
+        '6. Respondé siempre en español rioplatense, de forma muy breve.'
     );
 
     // --- Tool definitions ---
@@ -1028,17 +1029,18 @@ function webmcp_chat_handler(WP_REST_Request $request)
         array(
             'functionDeclarations' => array(
                 array(
-                    'description' => 'Busca médicos disponibles en la clínica según el día de la semana y la hora específica.',
+                    'name' => 'buscar_medicos',
+                    'description' => 'Busca médicos disponibles en la clínica. Usar siempre que el usuario mencione un día de la semana, con o sin hora.',
                     'parameters' => array(
                         'type' => 'object',
                         'properties' => array(
                             'dia' => array(
                                 'type' => 'string',
-                                'description' => 'Día de la semana en español (lunes, martes, miercoles, jueves, viernes, sabado)',
+                                'description' => 'Día de la semana en español sin acentos: lunes, martes, miercoles, jueves, viernes, sabado',
                             ),
                             'hora' => array(
                                 'type' => 'string',
-                                'description' => 'Hora en formato HH:MM (ej: 09:00, 14:30)',
+                                'description' => 'Hora en formato HH:MM de 24hs. Si el usuario dice "mañana" usar 09:00, "tarde" usar 14:00, "noche" usar 19:00.',
                             ),
                         ),
                         'required' => array('dia', 'hora'),
@@ -1046,6 +1048,11 @@ function webmcp_chat_handler(WP_REST_Request $request)
                 ),
             ),
         ),
+    );
+
+    // Forzar modo AUTO para que Gemini use la tool cuando corresponde
+    $tool_config = array(
+        'functionCallingConfig' => array('mode' => 'AUTO'),
     );
 
     // --- Primera llamada a Gemini ---
@@ -1062,6 +1069,8 @@ function webmcp_chat_handler(WP_REST_Request $request)
             ),
         ),
         'tools' => $tools,
+        'toolConfig' => $tool_config,
+        'generationConfig' => array('temperature' => 0.1),
     );
 
     $response = wp_remote_post($gemini_url, array(
@@ -1078,30 +1087,41 @@ function webmcp_chat_handler(WP_REST_Request $request)
 
     // Verificar si Gemini quiere llamar a una tool
     $candidate = $data['candidates'][0] ?? null;
-    if (!$candidate) {
-        return new WP_Error('gemini_no_response', 'Gemini no devolvió respuesta.', array('status' => 500));
+    $function_call = null;
+
+    if ($candidate) {
+        $parts = $candidate['content']['parts'] ?? array();
+        foreach ($parts as $part) {
+            if (isset($part['functionCall'])) {
+                $function_call = $part['functionCall'];
+                break;
+            }
+        }
+    } else {
+        // Gemini no devolvió candidato — loguear y usar fallback regex
+        error_log('WebMCP Gemini sin candidato. Body: ' . wp_remote_retrieve_body($response));
+        $parts = array();
     }
 
-    $parts = $candidate['content']['parts'] ?? array();
-
-    // Buscar function call en las parts
-    $function_call = null;
-    foreach ($parts as $part) {
-        if (isset($part['functionCall'])) {
-            $function_call = $part['functionCall'];
-            break;
+    // --- FALLBACK REGEX: si Gemini no llamó la tool, extraer día/hora del mensaje ---
+    if (!$function_call) {
+        $extracted = webmcp_extract_dia_hora($user_message);
+        if ($extracted) {
+            $function_call = array(
+                'name' => 'buscar_medicos',
+                'args' => $extracted,
+            );
         }
     }
 
-    // --- Si Gemini quiere usar una tool ---
+    // --- Ejecutar tool (ya sea de Gemini o del fallback regex) ---
     if ($function_call) {
         $fn_name = $function_call['name'];
         $fn_args = $function_call['args'] ?? array();
 
-        // Ejecutar la tool localmente
         $tool_result = webmcp_execute_tool($fn_name, $fn_args);
 
-        // Segunda llamada a Gemini con el resultado de la tool
+        // Segunda llamada a Gemini para respuesta en lenguaje natural
         $body['contents'][] = array(
             'role' => 'model',
             'parts' => array(array('functionCall' => $function_call)),
@@ -1123,9 +1143,8 @@ function webmcp_chat_handler(WP_REST_Request $request)
             'body' => wp_json_encode($body),
             'timeout' => 30,
         ));
-
         $data2 = json_decode(wp_remote_retrieve_body($response2), true);
-        $final_text = $data2['candidates'][0]['content']['parts'][0]['text'] ?? 'No pude procesar la respuesta.';
+        $final_text = $data2['candidates'][0]['content']['parts'][0]['text'] ?? '';
 
         return rest_ensure_response(array(
             'type' => 'tool_result',
@@ -1136,13 +1155,89 @@ function webmcp_chat_handler(WP_REST_Request $request)
         ));
     }
 
-    // --- Respuesta de texto directo ---
-    $text = $parts[0]['text'] ?? 'No entendí tu consulta. ¿Podés decirme qué día y horario necesitás?';
+    // --- Respuesta de texto directo (Gemini respondió sin tool) ---
+    $text = '';
+    if (!empty($parts[0]['text'])) {
+        $text = $parts[0]['text'];
+    } else {
+        $text = '¿Qué día y horario necesitás? Por ejemplo: "lunes a las 10".';
+    }
 
     return rest_ensure_response(array(
         'type' => 'text',
         'message' => $text,
     ));
+}
+
+/**
+ * Extrae día y hora del mensaje con regex como fallback cuando Gemini no llama la tool.
+ * Soporta: "lunes 10am", "lunes a las 10", "lunes 10:00", "lunes por la mañana", etc.
+ */
+function webmcp_extract_dia_hora(string $message): ?array
+{
+    $msg = mb_strtolower($message, 'UTF-8');
+
+    // Normalizar acentos
+    $acentos = array('á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ', 'Á', 'É', 'Í', 'Ó', 'Ú', 'Ñ');
+    $sin_accent = array('a', 'e', 'i', 'o', 'u', 'u', 'n', 'a', 'e', 'i', 'o', 'u', 'n');
+    $msg = str_replace($acentos, $sin_accent, $msg);
+
+    // Detectar día de la semana
+    $dias = array('lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo');
+    $dia_encontrado = null;
+    foreach ($dias as $dia) {
+        if (strpos($msg, $dia) !== false) {
+            $dia_encontrado = $dia;
+            break;
+        }
+    }
+
+    if (!$dia_encontrado)
+        return null;
+
+    // Detectar hora — orden de prioridad de más específico a más general
+    $hora_encontrada = null;
+
+    // 1. Formato HH:MM (ej: 10:00, 14:30)
+    if (preg_match('/(\d{1,2}):(\d{2})/', $msg, $m)) {
+        $hora_encontrada = sprintf('%02d:%02d', (int) $m[1], (int) $m[2]);
+    }
+    // 2. Formato "10am", "10 am"
+    elseif (preg_match('/(\d{1,2})\s*am\b/', $msg, $m)) {
+        $h = (int) $m[1];
+        $hora_encontrada = sprintf('%02d:00', $h === 12 ? 0 : $h);
+    }
+    // 3. Formato "2pm", "14pm"
+    elseif (preg_match('/(\d{1,2})\s*pm\b/', $msg, $m)) {
+        $h = (int) $m[1];
+        $hora_encontrada = sprintf('%02d:00', $h < 12 ? $h + 12 : $h);
+    }
+    // 4. "por la manana" / "a la manana"
+    elseif (strpos($msg, 'manana') !== false || strpos($msg, 'mañana') !== false) {
+        $hora_encontrada = '09:00';
+    }
+    // 5. "por la tarde"
+    elseif (strpos($msg, 'tarde') !== false) {
+        $hora_encontrada = '14:00';
+    }
+    // 6. "por la noche"
+    elseif (strpos($msg, 'noche') !== false) {
+        $hora_encontrada = '19:00';
+    }
+    // 7. "a las 10", "las 10"
+    elseif (preg_match('/(?:a las|las)\s+(\d{1,2})/', $msg, $m)) {
+        $hora_encontrada = sprintf('%02d:00', (int) $m[1]);
+    }
+    // 8. Número suelto razonable (6-23)
+    elseif (preg_match('/\b(\d{1,2})\b/', $msg, $m) && (int) $m[1] >= 6 && (int) $m[1] <= 23) {
+        $hora_encontrada = sprintf('%02d:00', (int) $m[1]);
+    }
+    // 9. Sin hora especificada → usar 09:00 como default para no bloquear la búsqueda
+    else {
+        $hora_encontrada = '09:00';
+    }
+
+    return array('dia' => $dia_encontrado, 'hora' => $hora_encontrada);
 }
 
 /**
