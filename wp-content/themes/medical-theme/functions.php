@@ -257,3 +257,19 @@ if (medical_is_woocommerce_activated()) {
 require get_template_directory() . '/inc/customizer.php';
 
 
+/**
+* Enqueue WebMCP Tool Scripts
+*/
+function medical_enqueue_webmcp() {
+// Only load if not in admin
+if (!is_admin()) {
+wp_enqueue_script(
+'medical-webmcp',
+get_template_directory_uri() . '/assets/js/webmcp.js',
+array(),
+'1.0.0',
+true
+);
+}
+}
+add_action('wp_enqueue_scripts', 'medical_enqueue_webmcp');

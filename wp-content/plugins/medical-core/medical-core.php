@@ -777,3 +777,78 @@ function medical_register_acf_fields()
     ));
 }
 add_action('acf/init', 'medical_register_acf_fields');
+/**
+* API Endpoint o Función Interna para buscar médicos disponibles
+*
+* @param array $params {
+* @type string $dia Día de la semana (lunes, martes, etc.)
+* @type string $hora Hora en formato 'HH:mm' (ej: '10:00')
+* }
+* @return array Lista de médicos disponibles
+*/
+function medical_buscar_disponibilidad($params) {
+if (empty($params['dia']) || empty($params['hora'])) {
+return [];
+}
+
+$dia_buscado = strtolower($params['dia']); // ej: 'lunes'
+$hora_buscada = $params['hora']; // ej: '09:00'
+
+$args = array(
+'post_type' => 'medico',
+'posts_per_page' => -1,
+'post_status' => 'publish',
+);
+
+$query = new WP_Query($args);
+$resultados = [];
+
+if ($query->have_posts()) {
+while ($query->have_posts()) {
+$query->the_post();
+$medico_id = get_the_ID();
+
+// Obtener horarios del Repeater ACF
+$horarios = get_field('horarios_atencion', $medico_id);
+
+if ($horarios) {
+foreach ($horarios as $horario) {
+// Verificar Día
+if (strtolower($horario['dia']) === $dia_buscado) {
+
+// Verificar Rango Horario
+$inicio = $horario['hora_inicio'];
+$fin = $horario['hora_fin'];
+
+// Simple string comparison for time (works for HH:MM format)
+if ($hora_buscada >= $inicio && $hora_buscada <= $fin) { $resultados[]=array( 'nombre'=> get_the_title(),
+    'especialidad' => get_the_term_list($medico_id, 'especialidad', '', ', '),
+    'sede' => isset($horario['sede']->ID) ? get_the_title($horario['sede']->ID) : 'Sede Principal',
+    'horario' => "$inicio - $fin",
+    'link' => get_permalink()
+    );
+    break; // Encontrado, pasar al siguiente médico
+    }
+    }
+    }
+    }
+    }
+    wp_reset_postdata();
+    }
+
+    return $resultados;
+    }
+
+    add_action('rest_api_init', function () {
+    register_rest_route('medical/v1', '/buscar-medicos', array(
+    'methods' => 'GET',
+    'callback' => function ($request) {
+    $params = $request->get_params(); // ?dia=lunes&hora=10:00
+    if (!isset($params['dia']) || !isset($params['hora'])) {
+    return new WP_Error('missing_params', 'Faltan parametros dia o hora', array('status' => 400));
+    }
+    return medical_buscar_disponibilidad($params);
+    },
+    'permission_callback' => '__return_true', // O validar API Key
+    ));
+    });
