@@ -1239,13 +1239,19 @@ function webmcp_render_settings_page()
 
 add_action('rest_api_init', function () {
     register_rest_route('webmcp/v1', '/chat', array(
-        'methods' => 'POST',
-        'callback' => 'webmcp_chat_handler',
+        'methods'             => 'POST',
+        'callback'            => 'webmcp_chat_handler',
         'permission_callback' => '__return_true',
-        'args' => array(
+        'args'                => array(
             'message' => array(
-                'required' => true,
+                'required'          => true,
                 'sanitize_callback' => 'sanitize_text_field',
+            ),
+            'history' => array(
+                'required'          => false,
+                'default'           => array(),
+                // El historial llega como array de objetos {role, parts}
+                // No usamos sanitize_callback aquí para no perder la estructura
             ),
         ),
     ));
@@ -1258,8 +1264,28 @@ function webmcp_chat_handler(WP_REST_Request $request)
         return new WP_Error('no_api_key', 'API Key de Gemini no configurada. Ve a Ajustes → WebMCP AI.', array('status' => 503));
     }
 
-    $model = get_option('webmcp_gemini_model', 'gemini-2.0-flash');
+    $model        = get_option('webmcp_gemini_model', 'gemini-2.0-flash');
     $user_message = $request->get_param('message');
+
+    // Historial de turnos anteriores enviado desde el frontend
+    // Formato: [ {role: 'user', parts: [{text: '...'}]}, {role: 'model', parts: [{text: '...'}]}, ... ]
+    $raw_history = $request->get_param('history');
+    $history = array();
+    if (is_array($raw_history)) {
+        foreach ($raw_history as $turn) {
+            $role = sanitize_text_field($turn['role'] ?? '');
+            if (!in_array($role, array('user', 'model'), true)) continue;
+            $parts = array();
+            foreach ((array)($turn['parts'] ?? array()) as $part) {
+                if (isset($part['text'])) {
+                    $parts[] = array('text' => sanitize_textarea_field($part['text']));
+                }
+            }
+            if (!empty($parts)) {
+                $history[] = array('role' => $role, 'parts' => $parts);
+            }
+        }
+    }
 
     // System prompt optimizado para acción directa
     $system_prompt = get_option(
@@ -1308,18 +1334,20 @@ function webmcp_chat_handler(WP_REST_Request $request)
     // --- Primera llamada a Gemini ---
     $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$api_key}";
 
+    // Construir contents: historial previo + mensaje actual
+    $contents = $history;
+    $contents[] = array(
+        'role'  => 'user',
+        'parts' => array(array('text' => $user_message)),
+    );
+
     $body = array(
         'system_instruction' => array(
             'parts' => array(array('text' => $system_prompt)),
         ),
-        'contents' => array(
-            array(
-                'role' => 'user',
-                'parts' => array(array('text' => $user_message)),
-            ),
-        ),
-        'tools' => $tools,
-        'toolConfig' => $tool_config,
+        'contents'       => $contents,
+        'tools'          => $tools,
+        'toolConfig'     => $tool_config,
         'generationConfig' => array('temperature' => 0.1),
     );
 

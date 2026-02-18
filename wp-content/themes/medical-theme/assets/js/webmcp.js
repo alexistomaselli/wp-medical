@@ -205,6 +205,9 @@
             return html;
         }
 
+        // Historial de conversación en memoria (se resetea al recargar la página)
+        const conversationHistory = [];
+
         async function sendMessage() {
             const text = input.value.trim();
             if (!text) return;
@@ -222,7 +225,10 @@
                 const response = await fetch('/wp-json/webmcp/v1/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text }),
+                    body: JSON.stringify({
+                        message: text,
+                        history: conversationHistory,  // <-- contexto completo
+                    }),
                 });
 
                 removeTypingIndicator();
@@ -234,6 +240,10 @@
                 }
 
                 const data = await response.json();
+
+                // Guardar turno en el historial (formato Gemini: role + parts)
+                conversationHistory.push({ role: 'user', parts: [{ text: text }] });
+                conversationHistory.push({ role: 'model', parts: [{ text: data.message || '' }] });
 
                 if (data.type === 'tool_result' && data.tool === 'buscar_medicos') {
                     // Render doctor cards + Gemini's text response
