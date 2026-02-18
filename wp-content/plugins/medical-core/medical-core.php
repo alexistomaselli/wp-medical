@@ -834,9 +834,12 @@ function medical_buscar_disponibilidad($params)
                             $resultados[] = array(
                                 'nombre' => get_the_title(),
                                 'especialidad' => get_the_term_list($medico_id, 'especialidad', '', ', '),
+                                // Strip tags incase it returns links, simple text is better for JSON
+                                'especialidad_texto' => strip_tags(get_the_term_list($medico_id, 'especialidad', '', ', ')),
                                 'sede' => isset($horario['sede']->ID) ? get_the_title($horario['sede']->ID) : 'Sede Principal',
                                 'horario' => "$inicio - $fin",
-                                'link' => get_permalink()
+                                'link' => get_permalink(),
+                                'foto' => get_the_post_thumbnail_url($medico_id, 'medium_large') ?: 'https://via.placeholder.com/400x400?text=No+Image'
                             );
                             // No hacemos break aquí porque un médico puede tener múltiples turnos el mismo día (mañana/tarde)
                             // Aunque si solo queremos saber si está disponible, con uno basta.
