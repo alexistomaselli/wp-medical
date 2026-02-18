@@ -108,9 +108,13 @@ function medical_scripts()
     wp_enqueue_script('medical-navigation', get_template_directory_uri() . '/assets/js/navigation.js', array(), $theme_version, true);
 
     // Enqueue cart script on cart page
+    // Enqueue cart script on cart page
     if (medical_is_woocommerce_activated() && is_cart()) {
         wp_enqueue_script('medical-cart', get_template_directory_uri() . '/assets/js/cart.js', array('jquery'), null, true);
     }
+
+    // Video Modal Script
+    wp_enqueue_script('medical-modal', get_template_directory_uri() . '/assets/js/modal.js', array(), $theme_version, true);
 }
 add_action('wp_enqueue_scripts', 'medical_scripts', 20); // High priority to ensure it loads after plugins
 
@@ -246,4 +250,10 @@ if (medical_is_woocommerce_activated()) {
     update_option('woocommerce_coming_soon', 'no');
     update_option('woocommerce_store_pages_only', 'no');
 }
+
+/**
+ * Customizer Additions
+ */
+require get_template_directory() . '/inc/customizer.php';
+
 

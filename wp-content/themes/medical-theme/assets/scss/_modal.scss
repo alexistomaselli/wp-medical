@@ -1,0 +1,110 @@
+@use 'variables' as *;
+
+.medical-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+
+    &.is-visible {
+        opacity: 1;
+        visibility: visible;
+
+        .medical-modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+}
+
+.medical-modal-content {
+    background: transparent;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 800px; // Smaller container
+    position: relative;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.3s ease;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+
+    video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 20px;
+        display: block;
+    }
+}
+
+.medical-modal-close {
+    position: absolute;
+    top: -50px;
+    right: 0;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 32px;
+    cursor: pointer;
+    z-index: 10001;
+    transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+
+    &:hover {
+        transform: scale(1.1);
+    }
+}
+
+.medical-modal-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid #fff;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(4px);
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    svg {
+        width: 40px;
+        height: 40px;
+        margin-left: 4px; // Optical center
+    }
+
+    &.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+}

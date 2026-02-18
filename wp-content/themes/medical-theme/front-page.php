@@ -21,7 +21,22 @@ get_header();
                 <div class="hero-actions">
                     <a href="<?php echo esc_url(home_url('/medicos/')); ?>" class="btn-primary">Ver Staff
                         Médico</a>
-                    <a href="#" class="btn-secondary">Más Información</a>
+                    <?php
+                    $video_url = function_exists('get_field') ? get_field('video_promocional', 'option') : '';
+                    if (!$video_url) {
+                        $video_url = get_theme_mod('medical_video_promocional');
+                    }
+
+                    if ($video_url):
+                        ?>
+                        <a href="#" class="btn-secondary js-open-video-modal">
+                            <span class="dashicons dashicons-video-alt3"
+                                style="margin-right: 5px; vertical-align: middle;"></span>
+                            Ver Video
+                        </a>
+                    <?php else: ?>
+                        <a href="#" class="btn-secondary">Más Información</a>
+                    <?php endif; ?>
                 </div>
                 <div class="hero-stats">
                     <div class="stat-card">
@@ -239,6 +254,28 @@ get_header();
         }
     }
 </style>
+
+<!-- Video Modal -->
+<?php if ($video_url):
+    $video_poster = get_theme_mod('medical_video_poster');
+    $video_autoplay = get_theme_mod('medical_video_autoplay', 'none');
+    ?>
+    <div id="medical-video-modal" class="medical-modal-backdrop" data-autoplay="<?php echo esc_attr($video_autoplay); ?>">
+        <div class="medical-modal-content">
+            <button class="medical-modal-close" aria-label="Cerrar">&times;</button>
+            <button class="medical-modal-play-btn" aria-label="Reproducir">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 5V19L19 12L8 5Z" />
+                </svg>
+            </button>
+            <video controls <?php if ($video_poster)
+                echo 'poster="' . esc_url($video_poster) . '"'; ?>>
+                <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
+                Tu navegador no soporta el tag de video.
+            </video>
+        </div>
+    </div>
+<?php endif; ?>
 
 <?php
 get_footer();
