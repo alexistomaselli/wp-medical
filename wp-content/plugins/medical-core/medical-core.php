@@ -624,50 +624,7 @@ function medical_register_acf_fields()
                 'type' => 'textarea',
                 'rows' => 4,
             ),
-            array(
-                'key' => 'field_medico_horarios',
-                'label' => 'Horarios de Atención',
-                'name' => 'horarios_atencion',
-                'type' => 'repeater',
-                'layout' => 'table',
-                'button_label' => 'Añadir Horario',
-                'sub_fields' => array(
-                    array(
-                        'key' => 'field_horario_dia',
-                        'label' => 'Día',
-                        'name' => 'dia',
-                        'type' => 'select',
-                        'choices' => array(
-                            'lunes' => 'Lunes',
-                            'martes' => 'Martes',
-                            'miercoles' => 'Miércoles',
-                            'jueves' => 'Jueves',
-                            'viernes' => 'Viernes',
-                        ),
-                    ),
-                    array(
-                        'key' => 'field_horario_inicio',
-                        'label' => 'Inicio',
-                        'name' => 'hora_inicio',
-                        'type' => 'time_picker',
-                    ),
-                    array(
-                        'key' => 'field_horario_fin',
-                        'label' => 'Fin',
-                        'name' => 'hora_fin',
-                        'type' => 'time_picker',
-                    ),
-                    array(
-                        'key' => 'field_horario_sede',
-                        'label' => 'Sede',
-                        'name' => 'sede',
-                        'type' => 'post_object',
-                        'post_type' => array('sede'),
-                        'return_format' => 'object',
-                        'ui' => 1,
-                    ),
-                ),
-            ),
+            // El campo repeater de horarios se gestiona con meta box nativo (ver medical_horarios_meta_box_init)
             array(
                 'key' => 'field_medico_sedes',
                 'label' => 'Sedes Relacionadas (Filtro)',
@@ -777,6 +734,299 @@ function medical_register_acf_fields()
     ));
 }
 add_action('acf/init', 'medical_register_acf_fields');
+
+// ============================================================
+// META BOX NATIVO: Horarios de Atención (reemplaza ACF repeater)
+// Compatible con ACF Free — guarda en el mismo formato serializado
+// ============================================================
+
+function medical_horarios_meta_box_init()
+{
+    add_meta_box(
+        'medical_horarios_atencion',
+        '🕐 Horarios de Atención',
+        'medical_horarios_meta_box_render',
+        'medico',
+        'normal',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'medical_horarios_meta_box_init');
+
+function medical_horarios_meta_box_render($post)
+{
+    wp_nonce_field('medical_horarios_save', 'medical_horarios_nonce');
+
+    // Obtener horarios guardados (formato ACF serializado)
+    $horarios = get_post_meta($post->ID, 'horarios_atencion', true);
+    if (!is_array($horarios)) {
+        $horarios = array();
+    }
+
+    // Obtener todas las sedes disponibles
+    $sedes = get_posts(array(
+        'post_type' => 'sede',
+        'posts_per_page' => -1,
+        'post_status' => 'publish',
+        'orderby' => 'title',
+        'order' => 'ASC',
+    ));
+
+    $dias = array(
+        'lunes' => 'Lunes',
+        'martes' => 'Martes',
+        'miercoles' => 'Miércoles',
+        'jueves' => 'Jueves',
+        'viernes' => 'Viernes',
+        'sabado' => 'Sábado',
+        'domingo' => 'Domingo',
+    );
+    ?>
+    <style>
+        #medical_horarios_atencion .inside {
+            padding: 0;
+        }
+
+        .mh-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .mh-table th {
+            background: #f0f6fc;
+            color: #1d2327;
+            font-weight: 600;
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 2px solid #c3c4c7;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .mh-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f0f0f1;
+            vertical-align: middle;
+        }
+
+        .mh-table tr:hover td {
+            background: #f6f7f7;
+        }
+
+        .mh-table select,
+        .mh-table input[type="time"] {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #8c8f94;
+            border-radius: 4px;
+            font-size: 13px;
+            background: #fff;
+        }
+
+        .mh-table select:focus,
+        .mh-table input[type="time"]:focus {
+            border-color: #2271b1;
+            box-shadow: 0 0 0 1px #2271b1;
+            outline: none;
+        }
+
+        .mh-btn-remove {
+            background: #d63638;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .mh-btn-remove:hover {
+            background: #b32d2e;
+        }
+
+        .mh-footer {
+            padding: 12px 16px;
+            background: #f6f7f7;
+            border-top: 1px solid #c3c4c7;
+        }
+
+        .mh-btn-add {
+            background: #2271b1;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .mh-btn-add:hover {
+            background: #135e96;
+        }
+
+        .mh-empty {
+            padding: 20px;
+            text-align: center;
+            color: #8c8f94;
+            font-style: italic;
+        }
+    </style>
+
+    <table class="mh-table" id="mh-horarios-table">
+        <thead>
+            <tr>
+                <th style="width:18%">Día</th>
+                <th style="width:18%">Hora Inicio</th>
+                <th style="width:18%">Hora Fin</th>
+                <th>Sede</th>
+                <th style="width:60px"></th>
+            </tr>
+        </thead>
+        <tbody id="mh-horarios-body">
+            <?php if (empty($horarios)): ?>
+                <tr id="mh-empty-row">
+                    <td colspan="5" class="mh-empty">No hay horarios cargados. Hacé clic en "Añadir Horario" para agregar.</td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($horarios as $i => $h):
+                    $sede_id = is_object($h['sede']) ? $h['sede']->ID : (int) $h['sede'];
+                    ?>
+                    <tr class="mh-row">
+                        <td>
+                            <select name="horarios_atencion[<?php echo $i; ?>][dia]">
+                                <?php foreach ($dias as $val => $label): ?>
+                                    <option value="<?php echo esc_attr($val); ?>" <?php selected($h['dia'] ?? '', $val); ?>>
+                                        <?php echo esc_html($label); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="time" name="horarios_atencion[<?php echo $i; ?>][hora_inicio]"
+                                value="<?php echo esc_attr($h['hora_inicio'] ?? ''); ?>">
+                        </td>
+                        <td>
+                            <input type="time" name="horarios_atencion[<?php echo $i; ?>][hora_fin]"
+                                value="<?php echo esc_attr($h['hora_fin'] ?? ''); ?>">
+                        </td>
+                        <td>
+                            <select name="horarios_atencion[<?php echo $i; ?>][sede]">
+                                <option value="">— Sin sede —</option>
+                                <?php foreach ($sedes as $sede): ?>
+                                    <option value="<?php echo $sede->ID; ?>" <?php selected($sede_id, $sede->ID); ?>>
+                                        <?php echo esc_html($sede->post_title); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                        <td>
+                            <button type="button" class="mh-btn-remove" onclick="mhRemoveRow(this)">✕</button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
+
+    <div class="mh-footer">
+        <button type="button" class="mh-btn-add" onclick="mhAddRow()">+ Añadir Horario</button>
+    </div>
+
+    <?php
+    // Template de fila vacía (oculta) para clonar con JS
+    ob_start();
+    ?>
+    <script id="mh-row-template" type="text/template">
+            <tr class="mh-row">
+                <td>
+                    <select name="horarios_atencion[__IDX__][dia]">
+                        <?php foreach ($dias as $val => $label): ?>
+                                <option value="<?php echo esc_attr($val); ?>"><?php echo esc_html($label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+                <td><input type="time" name="horarios_atencion[__IDX__][hora_inicio]" value="09:00"></td>
+                <td><input type="time" name="horarios_atencion[__IDX__][hora_fin]" value="17:00"></td>
+                <td>
+                    <select name="horarios_atencion[__IDX__][sede]">
+                        <option value="">— Sin sede —</option>
+                        <?php foreach ($sedes as $sede): ?>
+                                <option value="<?php echo $sede->ID; ?>"><?php echo esc_html($sede->post_title); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+                <td><button type="button" class="mh-btn-remove" onclick="mhRemoveRow(this)">✕</button></td>
+            </tr>
+        </script>
+    <script>
+        (function () {
+            var rowIndex = <?php echo max(count($horarios), 0); ?>;
+
+            window.mhAddRow = function () {
+                var tpl = document.getElementById('mh-row-template').innerHTML;
+                tpl = tpl.replace(/__IDX__/g, rowIndex++);
+                var tbody = document.getElementById('mh-horarios-body');
+                // Quitar fila vacía si existe
+                var emptyRow = document.getElementById('mh-empty-row');
+                if (emptyRow) emptyRow.remove();
+                tbody.insertAdjacentHTML('beforeend', tpl);
+            };
+
+            window.mhRemoveRow = function (btn) {
+                var row = btn.closest('tr');
+                var tbody = document.getElementById('mh-horarios-body');
+                row.remove();
+                // Mostrar fila vacía si no quedan filas
+                if (tbody.querySelectorAll('tr.mh-row').length === 0) {
+                    tbody.innerHTML = '<tr id="mh-empty-row"><td colspan="5" class="mh-empty">No hay horarios cargados. Hacé clic en "Añadir Horario" para agregar.</td></tr>';
+                }
+            };
+        })();
+    </script>
+    <?php
+    echo ob_get_clean();
+}
+
+function medical_horarios_meta_box_save($post_id)
+{
+    // Verificaciones de seguridad
+    if (!isset($_POST['medical_horarios_nonce']))
+        return;
+    if (!wp_verify_nonce($_POST['medical_horarios_nonce'], 'medical_horarios_save'))
+        return;
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE)
+        return;
+    if (!current_user_can('edit_post', $post_id))
+        return;
+    if (get_post_type($post_id) !== 'medico')
+        return;
+
+    $raw = isset($_POST['horarios_atencion']) ? $_POST['horarios_atencion'] : array();
+
+    $horarios = array();
+    foreach ($raw as $item) {
+        $dia = sanitize_text_field($item['dia'] ?? '');
+        $hora_ini = sanitize_text_field($item['hora_inicio'] ?? '');
+        $hora_fin = sanitize_text_field($item['hora_fin'] ?? '');
+        $sede_id = (int) ($item['sede'] ?? 0);
+
+        if (empty($dia) || empty($hora_ini) || empty($hora_fin))
+            continue;
+
+        $horarios[] = array(
+            'dia' => $dia,
+            'hora_inicio' => $hora_ini,
+            'hora_fin' => $hora_fin,
+            'sede' => $sede_id ?: '',
+        );
+    }
+
+    update_post_meta($post_id, 'horarios_atencion', $horarios);
+    // Actualizar referencia de campo ACF para que get_field() siga funcionando
+    update_post_meta($post_id, '_horarios_atencion', 'field_medico_horarios');
+}
+add_action('save_post', 'medical_horarios_meta_box_save');
 /**
  * API Endpoint o Función Interna para buscar médicos disponibles
  *
