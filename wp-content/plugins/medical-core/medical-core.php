@@ -899,7 +899,8 @@ function medical_horarios_meta_box_render($post)
                             <select name="horarios_atencion[<?php echo $i; ?>][dia]">
                                 <?php foreach ($dias as $val => $label): ?>
                                     <option value="<?php echo esc_attr($val); ?>" <?php selected($h['dia'] ?? '', $val); ?>>
-                                        <?php echo esc_html($label); ?></option>
+                                        <?php echo esc_html($label); ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </td>
@@ -916,7 +917,8 @@ function medical_horarios_meta_box_render($post)
                                 <option value="">— Sin sede —</option>
                                 <?php foreach ($sedes as $sede): ?>
                                     <option value="<?php echo $sede->ID; ?>" <?php selected($sede_id, $sede->ID); ?>>
-                                        <?php echo esc_html($sede->post_title); ?></option>
+                                        <?php echo esc_html($sede->post_title); ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </td>
@@ -938,27 +940,27 @@ function medical_horarios_meta_box_render($post)
     ob_start();
     ?>
     <script id="mh-row-template" type="text/template">
-            <tr class="mh-row">
-                <td>
-                    <select name="horarios_atencion[__IDX__][dia]">
-                        <?php foreach ($dias as $val => $label): ?>
-                                <option value="<?php echo esc_attr($val); ?>"><?php echo esc_html($label); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </td>
-                <td><input type="time" name="horarios_atencion[__IDX__][hora_inicio]" value="09:00"></td>
-                <td><input type="time" name="horarios_atencion[__IDX__][hora_fin]" value="17:00"></td>
-                <td>
-                    <select name="horarios_atencion[__IDX__][sede]">
-                        <option value="">— Sin sede —</option>
-                        <?php foreach ($sedes as $sede): ?>
-                                <option value="<?php echo $sede->ID; ?>"><?php echo esc_html($sede->post_title); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </td>
-                <td><button type="button" class="mh-btn-remove" onclick="mhRemoveRow(this)">✕</button></td>
-            </tr>
-        </script>
+                            <tr class="mh-row">
+                                <td>
+                                    <select name="horarios_atencion[__IDX__][dia]">
+                                        <?php foreach ($dias as $val => $label): ?>
+                                                                <option value="<?php echo esc_attr($val); ?>"><?php echo esc_html($label); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </td>
+                                <td><input type="time" name="horarios_atencion[__IDX__][hora_inicio]" value="09:00"></td>
+                                <td><input type="time" name="horarios_atencion[__IDX__][hora_fin]" value="17:00"></td>
+                                <td>
+                                    <select name="horarios_atencion[__IDX__][sede]">
+                                        <option value="">— Sin sede —</option>
+                                        <?php foreach ($sedes as $sede): ?>
+                                                                <option value="<?php echo $sede->ID; ?>"><?php echo esc_html($sede->post_title); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </td>
+                                <td><button type="button" class="mh-btn-remove" onclick="mhRemoveRow(this)">✕</button></td>
+                            </tr>
+                        </script>
     <script>
         (function () {
             var rowIndex = <?php echo max(count($horarios), 0); ?>;
@@ -1160,6 +1162,9 @@ function webmcp_register_settings()
         'sanitize_callback' => 'sanitize_textarea_field',
         'default' => 'Eres un asistente médico virtual de una clínica. Ayudas a los pacientes a encontrar médicos disponibles según el día y horario que necesitan. Cuando el usuario mencione un día y una hora, usa la herramienta buscar-medicos para encontrar disponibilidad.',
     ));
+    register_setting('webmcp_settings_group', 'webmcp_openai_api_key', array(
+        'sanitize_callback' => 'sanitize_text_field',
+    ));
 }
 
 function webmcp_render_settings_page()
@@ -1184,6 +1189,16 @@ function webmcp_render_settings_page()
                             placeholder="AIza..." />
                         <p class="description">Obtené tu API key en <a href="https://aistudio.google.com/app/apikey"
                                 target="_blank">Google AI Studio</a>.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="webmcp_openai_api_key">🎙️ OpenAI API Key (Whisper)</label></th>
+                    <td>
+                        <input type="password" id="webmcp_openai_api_key" name="webmcp_openai_api_key"
+                            value="<?php echo esc_attr(get_option('webmcp_openai_api_key')); ?>" class="regular-text"
+                            placeholder="sk-..." />
+                        <p class="description">Necesaria para la búsqueda por voz. Obtenela en <a
+                                href="https://platform.openai.com/api-keys" target="_blank">OpenAI Dashboard</a>.</p>
                     </td>
                 </tr>
                 <tr>
@@ -1218,16 +1233,23 @@ function webmcp_render_settings_page()
         </form>
 
         <?php
-        $api_key = get_option('webmcp_gemini_api_key');
-        if ($api_key): ?>
+        $gemini_key = get_option('webmcp_gemini_api_key');
+        $openai_key = get_option('webmcp_openai_api_key');
+        if ($gemini_key): ?>
             <hr>
             <h2>✅ Estado</h2>
-            <p style="color: green;">API Key configurada. El endpoint de chat está activo en:</p>
+            <p style="color: green;">Gemini API Key configurada. El chat con IA está activo.</p>
+            <?php if ($openai_key): ?>
+                <p style="color: green;">OpenAI API Key configurada. La búsqueda por voz está activa.</p>
+            <?php else: ?>
+                <p style="color: orange;">OpenAI API Key falta. La búsqueda por voz no estará disponible.</p>
+            <?php endif; ?>
+            <p>El endpoint de chat está activo en:</p>
             <code><?php echo esc_url(rest_url('webmcp/v1/chat')); ?></code>
         <?php else: ?>
             <hr>
             <h2>⚠️ Estado</h2>
-            <p style="color: orange;">Configurá la API Key para activar el chat con IA.</p>
+            <p style="color: orange;">Configurá la API Key de Gemini para activar el chat con IA.</p>
         <?php endif; ?>
     </div>
     <?php
@@ -1239,17 +1261,17 @@ function webmcp_render_settings_page()
 
 add_action('rest_api_init', function () {
     register_rest_route('webmcp/v1', '/chat', array(
-        'methods'             => 'POST',
-        'callback'            => 'webmcp_chat_handler',
+        'methods' => 'POST',
+        'callback' => 'webmcp_chat_handler',
         'permission_callback' => '__return_true',
-        'args'                => array(
+        'args' => array(
             'message' => array(
-                'required'          => true,
+                'required' => true,
                 'sanitize_callback' => 'sanitize_text_field',
             ),
             'history' => array(
-                'required'          => false,
-                'default'           => array(),
+                'required' => false,
+                'default' => array(),
                 // El historial llega como array de objetos {role, parts}
                 // No usamos sanitize_callback aquí para no perder la estructura
             ),
@@ -1264,7 +1286,7 @@ function webmcp_chat_handler(WP_REST_Request $request)
         return new WP_Error('no_api_key', 'API Key de Gemini no configurada. Ve a Ajustes → WebMCP AI.', array('status' => 503));
     }
 
-    $model        = get_option('webmcp_gemini_model', 'gemini-2.0-flash');
+    $model = get_option('webmcp_gemini_model', 'gemini-2.0-flash');
     $user_message = $request->get_param('message');
 
     // Historial de turnos anteriores enviado desde el frontend
@@ -1274,9 +1296,10 @@ function webmcp_chat_handler(WP_REST_Request $request)
     if (is_array($raw_history)) {
         foreach ($raw_history as $turn) {
             $role = sanitize_text_field($turn['role'] ?? '');
-            if (!in_array($role, array('user', 'model'), true)) continue;
+            if (!in_array($role, array('user', 'model'), true))
+                continue;
             $parts = array();
-            foreach ((array)($turn['parts'] ?? array()) as $part) {
+            foreach ((array) ($turn['parts'] ?? array()) as $part) {
                 if (isset($part['text'])) {
                     $parts[] = array('text' => sanitize_textarea_field($part['text']));
                 }
@@ -1337,7 +1360,7 @@ function webmcp_chat_handler(WP_REST_Request $request)
     // Construir contents: historial previo + mensaje actual
     $contents = $history;
     $contents[] = array(
-        'role'  => 'user',
+        'role' => 'user',
         'parts' => array(array('text' => $user_message)),
     );
 
@@ -1345,9 +1368,9 @@ function webmcp_chat_handler(WP_REST_Request $request)
         'system_instruction' => array(
             'parts' => array(array('text' => $system_prompt)),
         ),
-        'contents'       => $contents,
-        'tools'          => $tools,
-        'toolConfig'     => $tool_config,
+        'contents' => $contents,
+        'tools' => $tools,
+        'toolConfig' => $tool_config,
         'generationConfig' => array('temperature' => 0.1),
     );
 
@@ -1533,4 +1556,100 @@ function webmcp_execute_tool(string $tool_name, array $args): array
         default:
             return array('error' => "Tool '{$tool_name}' no encontrada.");
     }
+}
+
+/**
+ * === WHISPER AI TRANSCRIPTION ===
+ */
+
+add_action('rest_api_init', function () {
+    register_rest_route('webmcp/v1', '/transcribe', array(
+        'methods' => 'POST',
+        'callback' => 'medical_handle_transcription',
+        'permission_callback' => '__return_true',
+    ));
+});
+
+function medical_handle_transcription($request)
+{
+    // 1. Verificar archivos y errores de PHP
+    $files = $request->get_file_params();
+    if (empty($files['audio'])) {
+        return new WP_Error('no_audio', 'No se recibió ningún archivo de audio.', array('status' => 400));
+    }
+
+    $audio_file = $files['audio'];
+
+    // Verificar si hubo error en la subida (ej. excede tamaño)
+    if ($audio_file['error'] !== UPLOAD_ERR_OK) {
+        return new WP_Error('upload_error', 'Error en la subida (PHP Error Code: ' . $audio_file['error'] . ')', array('status' => 400));
+    }
+
+    // Verificar que el archivo temporal existe
+    if (!file_exists($audio_file['tmp_name'])) {
+        return new WP_Error('file_not_found', 'El archivo temporal no existe en el servidor.', array('status' => 500));
+    }
+
+    $api_key = get_option('webmcp_openai_api_key');
+    $source = 'admin_option';
+
+    // Si no está en el admin, buscamos en wp-config.php
+    if (empty($api_key) && defined('OPENAI_API_KEY')) {
+        $api_key = OPENAI_API_KEY;
+        $source = 'wp_config_constant';
+    }
+
+    if (empty($api_key)) {
+        error_log('WebMCP Error: No OpenAI API Key found in either admin options or wp-config.php');
+        return new WP_Error('no_api_key', 'OpenAI API Key no configurada. Cargala en Ajustes -> WebMCP AI o en wp-config.php.', array('status' => 401));
+    }
+
+    // Log para debug (solo primeros 5 caracteres)
+    error_log('WebMCP: Using OpenAI API Key from ' . $source . ' (Starts with: ' . substr($api_key, 0, 5) . '...)');
+
+    // 2. Preparar CURL
+    $curl = curl_init();
+
+    // Forzamos el nombre del archivo a .webm para Whisper
+    $cfile = new CURLFile($audio_file['tmp_name'], $audio_file['type'], 'recording.webm');
+
+    curl_setopt_array($curl, array(
+        CURLOPT_URL => 'https://api.openai.com/v1/audio/transcriptions',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => array(
+            'file' => $cfile,
+            'model' => 'whisper-1',
+            'language' => 'es'
+        ),
+        CURLOPT_HTTPHEADER => array(
+            'Authorization: Bearer ' . $api_key
+        ),
+        CURLOPT_TIMEOUT => 30, // Timeout de 30 segundos
+    ));
+
+    $response = curl_exec($curl);
+    $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    $err = curl_error($curl);
+    curl_close($curl);
+
+    if ($err) {
+        return new WP_Error('curl_error', 'Error CURL: ' . $err, array('status' => 500));
+    }
+
+    $result = json_decode($response, true);
+
+    if ($http_code !== 200) {
+        $msg = $result['error']['message'] ?? 'Error desconocido de OpenAI (HTTP ' . $http_code . ')';
+        error_log('WebMCP Whisper Error: ' . $msg . ' (HTTP ' . $http_code . ')');
+        return new WP_Error('openai_api_error', $msg, array('status' => $http_code));
+    }
+
+    if (empty($result) || !isset($result['text'])) {
+        return new WP_Error('invalid_response', 'La respuesta de OpenAI no es válida.', array('status' => 500));
+    }
+
+    return array(
+        'text' => $result['text'],
+    );
 }

@@ -98,10 +98,14 @@
                 </div>
 
                 <!-- Input area -->
-                <div style="padding: 12px 16px; border-top: 1px solid #f0f0f5; background: #fff; display: flex; gap: 8px; align-items: center;">
-                    <input id="webmcp-chat-input" type="text" placeholder="Ej: Busco médico el lunes a las 10..." style="flex: 1; padding: 10px 14px; border: 1px solid #e8e8f0; border-radius: 25px; font-size: 13px; font-family: 'Poppins', sans-serif; outline: none; color: #2E2E2E; background: #f8f9ff;" />
-                    <button id="webmcp-chat-send" style="width: 38px; height: 38px; background: #615EFC; color: #fff; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; box-shadow: 0 4px 10px rgba(97,94,252,0.3);">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                <div style="padding: 12px 16px; border-top: 1px solid #f0f0f5; background: #fff; display: flex; gap: 8px; align-items: center; min-height: 64px;">
+                    <button id="webmcp-chat-mic" style="width: 42px; height: 42px; min-width: 42px; background: #f0f0f5; color: #615EFC; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; padding: 0; outline: none; position: relative;">
+                        <svg id="mic-icon-idle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block; pointer-events: none;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                        <div id="mic-icon-active" style="display:none; width: 14px; height: 14px; background: #ff4757; border-radius: 50%; animation: webmcp-pulse 1s infinite;"></div>
+                    </button>
+                    <input id="webmcp-chat-input" type="text" placeholder="Ej: Busco médico el lunes a las 10..." style="flex: 1; padding: 12px 16px; border: 1px solid #e8e8f0; border-radius: 25px; font-size: 14px; font-family: 'Poppins', sans-serif; outline: none; color: #2E2E2E; background: #f8f9ff; height: 42px; box-sizing: border-box;" />
+                    <button id="webmcp-chat-send" style="width: 42px; height: 42px; min-width: 42px; background: #615EFC; color: #fff; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; padding: 0; outline: none; box-shadow: 0 4px 10px rgba(97,94,252,0.3); position: relative;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display: block; pointer-events: none; margin-left: 2px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                     </button>
                 </div>
             </div>
@@ -114,6 +118,13 @@
         const messages = document.getElementById('webmcp-chat-messages');
         const input = document.getElementById('webmcp-chat-input');
         const sendBtn = document.getElementById('webmcp-chat-send');
+        const micBtn = document.getElementById('webmcp-chat-mic');
+        const micIdle = document.getElementById('mic-icon-idle');
+        const micActive = document.getElementById('mic-icon-active');
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
 
         // Toggle panel
         btn.addEventListener('click', () => {
@@ -121,6 +132,72 @@
             if (panel.style.display === 'flex') input.focus();
         });
         close.addEventListener('click', () => panel.style.display = 'none');
+
+        // Mic Click
+        micBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (event) => audioChunks.push(event.data);
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        transcribeAudio(audioBlob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    micBtn.style.background = '#ffecec';
+                    micIdle.style.display = 'none';
+                    micActive.style.display = 'block';
+                } catch (err) {
+                    console.error('Error accessing microphone:', err);
+                    alert('No se pudo acceder al micrófono.');
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.style.background = '#f0f0f5';
+                micIdle.style.display = 'block';
+                micActive.style.display = 'none';
+            }
+        });
+
+        async function transcribeAudio(blob) {
+            const formData = new FormData();
+            formData.append('audio', blob, 'recording.webm');
+
+            input.placeholder = 'Transcribiendo audio...';
+            input.disabled = true;
+
+            try {
+                const response = await fetch('/wp-json/webmcp/v1/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || 'Error en transcripción');
+                }
+
+                const data = await response.json();
+                if (data.text) {
+                    input.value = data.text;
+                    sendMessage(); // Auto-enviar
+                }
+            } catch (err) {
+                console.error('Transcription error:', err);
+                addMessage('⚠️ Error al transcribir el audio.', 'bot');
+            } finally {
+                input.placeholder = 'Ej: Busco médico el lunes a las 10...';
+                input.disabled = false;
+                input.focus();
+            }
+        }
 
         // Send on Enter
         input.addEventListener('keydown', (e) => {
@@ -164,11 +241,14 @@
             messages.appendChild(wrapper);
             messages.scrollTop = messages.scrollHeight;
 
-            // Add bounce animation if not present
-            if (!document.getElementById('webmcp-bounce-style')) {
+            // Add bounce and pulse animations if not present
+            if (!document.getElementById('webmcp-sim-styles')) {
                 const style = document.createElement('style');
-                style.id = 'webmcp-bounce-style';
-                style.textContent = '@keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }';
+                style.id = 'webmcp-sim-styles';
+                style.textContent = `
+                    @keyframes webmcp-bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+                    @keyframes webmcp-pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+                `;
                 document.head.appendChild(style);
             }
         }
