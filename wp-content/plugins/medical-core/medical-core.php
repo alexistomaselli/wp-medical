@@ -1009,15 +1009,25 @@ function webmcp_chat_handler(WP_REST_Request $request)
     }
 
     $model = get_option('webmcp_gemini_model', 'gemini-2.0-flash');
-    $system_prompt = get_option('webmcp_system_prompt', 'Eres un asistente médico virtual. Ayudas a encontrar médicos disponibles.');
     $user_message = $request->get_param('message');
 
-    // --- Tool definitions para Gemini ---
+    // System prompt optimizado para acción directa
+    $system_prompt = get_option(
+        'webmcp_system_prompt',
+        'Eres un asistente médico virtual de una clínica. Tu única función es buscar médicos disponibles usando la herramienta buscar_medicos. ' .
+        'REGLAS ESTRICTAS: ' .
+        '1. Cuando el usuario mencione cualquier día de la semana (lunes, martes, miércoles, jueves, viernes, sábado) Y una hora, INMEDIATAMENTE llama a buscar_medicos sin hacer preguntas. ' .
+        '2. Si el usuario dice "lunes a las 10", "lunes 10am", "lunes 10:00", "el lunes a las 10", todos son válidos — interpretá la hora como HH:00 si no tiene minutos. ' .
+        '3. NUNCA pidas confirmación. NUNCA preguntes el formato. Simplemente ejecutá la búsqueda. ' .
+        '4. Si el usuario NO menciona día ni hora, pedí solo esa información de forma breve. ' .
+        '5. Respondé siempre en español rioplatense.'
+    );
+
+    // --- Tool definitions ---
     $tools = array(
         array(
             'functionDeclarations' => array(
                 array(
-                    'name' => 'buscar_medicos',
                     'description' => 'Busca médicos disponibles en la clínica según el día de la semana y la hora específica.',
                     'parameters' => array(
                         'type' => 'object',
