@@ -65,25 +65,45 @@
     });
 
 
-    // --- 3. AI Agent Simulator (UI for Testing) ---
-    // Creates a floating button to test the Registered Tools
+    // --- 3. AI Agent Simulator (Chat UI) ---
     document.addEventListener('DOMContentLoaded', () => {
         const container = document.createElement('div');
         container.innerHTML = `
-            <div id="webmcp-sim-btn" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; background: #000; color: #fff; padding: 12px 20px; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-family: sans-serif; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                🤖 Test AI Tools
+            <div id="webmcp-sim-btn" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; background: #615EFC; color: #fff; padding: 14px 20px; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 20px rgba(97,94,252,0.4); font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                🤖 Asistente Médico
             </div>
-            
-            <div id="webmcp-sim-panel" style="display: none; position: fixed; bottom: 80px; right: 20px; width: 350px; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 9999; overflow: hidden; font-family: sans-serif; border: 1px solid #eee;">
-                <div style="background: #f5f5f5; padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
-                    <strong style="color: #333;">Available Tools</strong>
-                    <span id="webmcp-close" style="cursor: pointer; color: #666;">✕</span>
+
+            <div id="webmcp-sim-panel" style="display: none; position: fixed; bottom: 80px; right: 20px; width: 360px; background: #fff; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); z-index: 9999; overflow: hidden; font-family: 'Poppins', sans-serif; border: 1px solid #f0f0f5; display: none; flex-direction: column;">
+                <!-- Header -->
+                <div style="background: #615EFC; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;">🤖</div>
+                        <div>
+                            <div style="color: #fff; font-weight: 700; font-size: 14px;">Asistente Médico</div>
+                            <div style="color: rgba(255,255,255,0.7); font-size: 11px;">Powered by Gemini AI</div>
+                        </div>
+                    </div>
+                    <span id="webmcp-close" style="cursor: pointer; color: rgba(255,255,255,0.8); font-size: 20px; line-height: 1;">✕</span>
                 </div>
-                <div id="webmcp-tools-list" style="padding: 15px; max-height: 400px; overflow-y: auto;">
-                    <!-- Tools will be injected here -->
-                    <p style="color: #666; font-size: 13px;">No tools registered yet.</p>
+
+                <!-- Chat messages -->
+                <div id="webmcp-chat-messages" style="padding: 16px; height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #f8f9ff;">
+                    <!-- Welcome message -->
+                    <div class="chat-msg-bot" style="display: flex; gap: 8px; align-items: flex-start;">
+                        <div style="width: 28px; height: 28px; background: #615EFC; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">🤖</div>
+                        <div style="background: #fff; border-radius: 12px 12px 12px 0; padding: 10px 14px; font-size: 13px; color: #2E2E2E; box-shadow: 0 2px 8px rgba(0,0,0,0.06); max-width: 260px; line-height: 1.5;">
+                            ¡Hola! Soy tu asistente médico. Decime qué día y horario necesitás y te busco los médicos disponibles. 😊
+                        </div>
+                    </div>
                 </div>
-                <div id="webmcp-result" style="background: #282c34; color: #abb2bf; padding: 15px; font-family: monospace; font-size: 12px; white-space: pre-wrap; display: none; border-top: 1px solid #ddd; max-height: 50vh; overflow-y: auto;"></div>
+
+                <!-- Input area -->
+                <div style="padding: 12px 16px; border-top: 1px solid #f0f0f5; background: #fff; display: flex; gap: 8px; align-items: center;">
+                    <input id="webmcp-chat-input" type="text" placeholder="Ej: Busco médico el lunes a las 10..." style="flex: 1; padding: 10px 14px; border: 1px solid #e8e8f0; border-radius: 25px; font-size: 13px; font-family: 'Poppins', sans-serif; outline: none; color: #2E2E2E; background: #f8f9ff;" />
+                    <button id="webmcp-chat-send" style="width: 38px; height: 38px; background: #615EFC; color: #fff; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; box-shadow: 0 4px 10px rgba(97,94,252,0.3);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </div>
             </div>
         `;
         document.body.appendChild(container);
@@ -91,116 +111,148 @@
         const btn = document.getElementById('webmcp-sim-btn');
         const panel = document.getElementById('webmcp-sim-panel');
         const close = document.getElementById('webmcp-close');
-        const list = document.getElementById('webmcp-tools-list');
-        const result = document.getElementById('webmcp-result');
+        const messages = document.getElementById('webmcp-chat-messages');
+        const input = document.getElementById('webmcp-chat-input');
+        const sendBtn = document.getElementById('webmcp-chat-send');
 
-        btn.addEventListener('click', () => panel.style.display = 'block');
-        close.addEventListener('click', () => {
-            panel.style.display = 'none';
-            result.style.display = 'none';
+        // Toggle panel
+        btn.addEventListener('click', () => {
+            panel.style.display = panel.style.display === 'none' || panel.style.display === '' ? 'flex' : 'none';
+            if (panel.style.display === 'flex') input.focus();
         });
+        close.addEventListener('click', () => panel.style.display = 'none');
 
-        window.updateWebMCPSimulator = () => {
-            const tools = navigator.modelContext._getTools();
-            if (tools.size === 0) return;
+        // Send on Enter
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        });
+        sendBtn.addEventListener('click', sendMessage);
 
-            list.innerHTML = '';
-            tools.forEach((tool, name) => {
-                const item = document.createElement('div');
-                item.style.marginBottom = '20px';
-                item.innerHTML = `
-                    <div style="font-weight: bold; color: #0073aa; margin-bottom: 5px;">🛠 ${name}</div>
-                    <div style="font-size: 12px; color: #666; margin-bottom: 10px;">${tool.description}</div>
-                    <div style="background: #f0f0f0; padding: 10px; border-radius: 6px;">
-                        <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #888;">Test Parameters:</div>
-                        ${Object.keys(tool.inputSchema.properties).map(prop => `
-                            <div style="margin-bottom: 8px;">
-                                <label style="display: block; font-size: 12px; margin-bottom: 3px;">${prop}</label>
-                                <input type="text" class="sim-input" data-tool="${name}" data-prop="${prop}" placeholder="${tool.inputSchema.properties[prop].description}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+        function addMessage(html, type = 'bot') {
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'display: flex; gap: 8px; align-items: flex-start;' + (type === 'user' ? 'flex-direction: row-reverse;' : '');
+
+            const avatar = document.createElement('div');
+            avatar.style.cssText = `width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; ${type === 'user' ? 'background: #e8e8f0;' : 'background: #615EFC;'}`;
+            avatar.textContent = type === 'user' ? '👤' : '🤖';
+
+            const bubble = document.createElement('div');
+            bubble.style.cssText = `max-width: 260px; padding: 10px 14px; font-size: 13px; line-height: 1.5; box-shadow: 0 2px 8px rgba(0,0,0,0.06); ${type === 'user' ? 'background: #615EFC; color: #fff; border-radius: 12px 12px 0 12px;' : 'background: #fff; color: #2E2E2E; border-radius: 12px 12px 12px 0;'}`;
+            bubble.innerHTML = html;
+
+            wrapper.appendChild(avatar);
+            wrapper.appendChild(bubble);
+            messages.appendChild(wrapper);
+            messages.scrollTop = messages.scrollHeight;
+            return bubble;
+        }
+
+        function addTypingIndicator() {
+            const wrapper = document.createElement('div');
+            wrapper.id = 'webmcp-typing';
+            wrapper.style.cssText = 'display: flex; gap: 8px; align-items: flex-start;';
+            wrapper.innerHTML = `
+                <div style="width: 28px; height: 28px; background: #615EFC; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">🤖</div>
+                <div style="background: #fff; border-radius: 12px 12px 12px 0; padding: 12px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                        <span style="width: 6px; height: 6px; background: #615EFC; border-radius: 50%; animation: bounce 1s infinite;"></span>
+                        <span style="width: 6px; height: 6px; background: #615EFC; border-radius: 50%; animation: bounce 1s infinite 0.2s;"></span>
+                        <span style="width: 6px; height: 6px; background: #615EFC; border-radius: 50%; animation: bounce 1s infinite 0.4s;"></span>
+                    </div>
+                </div>
+            `;
+            messages.appendChild(wrapper);
+            messages.scrollTop = messages.scrollHeight;
+
+            // Add bounce animation if not present
+            if (!document.getElementById('webmcp-bounce-style')) {
+                const style = document.createElement('style');
+                style.id = 'webmcp-bounce-style';
+                style.textContent = '@keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }';
+                document.head.appendChild(style);
+            }
+        }
+
+        function removeTypingIndicator() {
+            const el = document.getElementById('webmcp-typing');
+            if (el) el.remove();
+        }
+
+        function renderDoctorCards(doctors) {
+            if (doctors.length === 0) {
+                return '<div style="text-align: center; color: #888; padding: 10px;">No se encontraron médicos para ese horario.</div>';
+            }
+            let html = '<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 4px;">';
+            doctors.forEach(doc => {
+                html += `
+                    <div style="display: flex; align-items: center; background: #f8f9ff; border-radius: 12px; padding: 10px; gap: 10px; border: 1px solid #f0f0f5;">
+                        <div style="flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; background-image: url('${doc.foto}'); background-size: cover; background-position: center top; background-color: #e8e8f0;"></div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 700; font-size: 12px; color: #2E2E2E; margin-bottom: 2px;">${doc.nombre}</div>
+                            <div style="color: #615EFC; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${doc.especialidad_texto}</div>
+                            <div style="display: flex; gap: 6px; font-size: 10px; flex-wrap: wrap;">
+                                <span style="background: #fff; color: #615EFC; padding: 1px 7px; border-radius: 6px; font-weight: 600; border: 1px solid #e8e8f0;">🕐 ${doc.horario}</span>
+                                <span style="color: #666;">📍 ${doc.sede}</span>
                             </div>
-                        `).join('')}
-                        <button class="sim-exec-btn" data-tool="${name}" style="background: #0073aa; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 13px; margin-top: 5px;">Run Tool</button>
+                        </div>
+                        <a href="${doc.link}" target="_blank" style="flex-shrink: 0; width: 30px; height: 30px; background: #615EFC; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; box-shadow: 0 3px 8px rgba(97,94,252,0.3);">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </a>
                     </div>
                 `;
-                list.appendChild(item);
             });
+            html += '</div>';
+            return html;
+        }
 
-            // Re-attach event listeners to new buttons
-            document.querySelectorAll('.sim-exec-btn').forEach(b => {
-                b.addEventListener('click', async (e) => {
-                    const toolName = e.target.dataset.tool;
-                    const tool = tools.get(toolName);
-                    const inputs = {};
+        async function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
 
-                    document.querySelectorAll(`.sim-input[data-tool="${toolName}"]`).forEach(input => {
-                        inputs[input.dataset.prop] = input.value;
-                    });
+            // Show user message
+            addMessage(text, 'user');
+            input.value = '';
+            sendBtn.disabled = true;
+            input.disabled = true;
 
-                    e.target.innerText = 'Running...';
-                    result.style.display = 'block';
-                    result.innerText = 'Executing...';
+            // Show typing indicator
+            addTypingIndicator();
 
-                    try {
-                        console.log("Simulator input:", inputs);
-                        const output = await tool.execute(inputs);
-
-                        // Parse JSON content if tool is buscar-medicos
-                        if (toolName === 'buscar-medicos') {
-                            try {
-                                const doctors = JSON.parse(output.content[0].text);
-
-                                if (doctors.length === 0) {
-                                    result.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">No se encontraron médicos para este horario.</div>';
-                                } else {
-                                    // Use simple flex column for better stacking in narrow panel
-                                    let cardsHtml = '<div style="display: flex; flex-direction: column; gap: 12px; font-family: \'Poppins\', sans-serif;">';
-
-                                    doctors.forEach(doc => {
-                                        cardsHtml += `
-                                            <div style="display: flex; align-items: center; background: #fff; border-radius: 16px; box-shadow: 0 4px 12px rgba(97, 94, 252, 0.08); padding: 12px; border: 1px solid #f0f0f5; gap: 12px; transition: transform 0.2s;">
-                                                <div style="flex-shrink: 0; width: 60px; height: 60px; border-radius: 50%; overflow: hidden; border: 1px solid #f0f0f5; background-color: #f9f9fb; background-image: url('${doc.foto}'); background-size: cover; background-position: center top; background-repeat: no-repeat;">
-                                                </div>
-                                                <div style="flex: 1; min-width: 0; text-align: left;">
-                                                    <h3 style="margin: 0 0 2px; color: #2E2E2E; font-size: 14px; font-weight: 700; line-height: 1.2;">${doc.nombre}</h3>
-                                                    <div style="color: #615EFC; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                        ${doc.especialidad_texto}
-                                                    </div>
-                                                    <div style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 10px;">
-                                                        <span style="background: #F8F9FF; color: #615EFC; padding: 2px 8px; border-radius: 6px; font-weight: 600;">🕐 ${doc.horario}</span>
-                                                        <span style="color: #666; display: inline-flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px;">📍 ${doc.sede}</span>
-                                                    </div>
-                                                </div>
-                                                <a href="${doc.link}" target="_blank" style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: #615EFC; color: #fff; border-radius: 50%; text-decoration: none; box-shadow: 0 4px 10px rgba(97, 94, 252, 0.2); transition: all 0.2s;">
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                                                </a>
-                                            </div>
-                                        `;
-                                    });
-                                    cardsHtml += '</div>';
-
-                                    result.innerHTML = cardsHtml;
-                                    result.style.background = '#f5f7fa'; // Lighter background for cards
-                                    result.style.color = '#333';
-                                    result.style.padding = '15px';
-                                }
-                            } catch (e) {
-                                result.innerText = output.content[0].text; // Fallback to raw text
-                            }
-                        } else {
-                            result.innerText = output.content[0].text;
-                        }
-
-                    } catch (err) {
-                        result.innerText = 'Error: ' + err.message;
-                    } finally {
-                        e.target.innerText = 'Run Tool';
-                    }
+            try {
+                const response = await fetch('/wp-json/webmcp/v1/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text }),
                 });
-            });
-        };
 
-        // Initial render
-        window.updateWebMCPSimulator();
+                removeTypingIndicator();
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    addMessage(`⚠️ ${err.message || 'Error al conectar con el asistente.'}`, 'bot');
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.type === 'tool_result' && data.tool === 'buscar_medicos') {
+                    // Render doctor cards + Gemini's text response
+                    const cardsHtml = renderDoctorCards(data.tool_result);
+                    addMessage(data.message + cardsHtml, 'bot');
+                } else {
+                    addMessage(data.message, 'bot');
+                }
+
+            } catch (err) {
+                removeTypingIndicator();
+                addMessage('⚠️ Error de conexión. Verificá que la API Key esté configurada en Ajustes → WebMCP AI.', 'bot');
+                console.error('WebMCP Chat error:', err);
+            } finally {
+                sendBtn.disabled = false;
+                input.disabled = false;
+                input.focus();
+            }
+        }
     });
 
 })();

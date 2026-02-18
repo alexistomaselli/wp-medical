@@ -879,3 +879,275 @@ add_action('rest_api_init', function () {
         'permission_callback' => '__return_true', // O validar API Key
     ));
 });
+
+// =============================================================================
+// WEBMCP SETTINGS PAGE
+// =============================================================================
+
+add_action('admin_menu', 'webmcp_add_settings_page');
+function webmcp_add_settings_page()
+{
+    add_options_page(
+        'WebMCP AI Settings',
+        'WebMCP AI',
+        'manage_options',
+        'webmcp-settings',
+        'webmcp_render_settings_page'
+    );
+}
+
+add_action('admin_init', 'webmcp_register_settings');
+function webmcp_register_settings()
+{
+    register_setting('webmcp_settings_group', 'webmcp_gemini_api_key', array(
+        'sanitize_callback' => 'sanitize_text_field',
+    ));
+    register_setting('webmcp_settings_group', 'webmcp_gemini_model', array(
+        'sanitize_callback' => 'sanitize_text_field',
+        'default' => 'gemini-2.0-flash',
+    ));
+    register_setting('webmcp_settings_group', 'webmcp_system_prompt', array(
+        'sanitize_callback' => 'sanitize_textarea_field',
+        'default' => 'Eres un asistente médico virtual de una clínica. Ayudas a los pacientes a encontrar médicos disponibles según el día y horario que necesitan. Cuando el usuario mencione un día y una hora, usa la herramienta buscar-medicos para encontrar disponibilidad.',
+    ));
+}
+
+function webmcp_render_settings_page()
+{
+    if (!current_user_can('manage_options'))
+        return;
+    ?>
+    <div class="wrap">
+        <h1>⚕️ WebMCP AI — Configuración</h1>
+        <p>Configura la integración con Gemini AI para el asistente de lenguaje natural.</p>
+
+        <form method="post" action="options.php">
+            <?php settings_fields('webmcp_settings_group'); ?>
+            <?php do_settings_sections('webmcp-settings'); ?>
+
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="webmcp_gemini_api_key">🔑 Gemini API Key</label></th>
+                    <td>
+                        <input type="password" id="webmcp_gemini_api_key" name="webmcp_gemini_api_key"
+                            value="<?php echo esc_attr(get_option('webmcp_gemini_api_key')); ?>" class="regular-text"
+                            placeholder="AIza..." />
+                        <p class="description">Obtené tu API key en <a href="https://aistudio.google.com/app/apikey"
+                                target="_blank">Google AI Studio</a>.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="webmcp_gemini_model">🤖 Modelo Gemini</label></th>
+                    <td>
+                        <select id="webmcp_gemini_model" name="webmcp_gemini_model">
+                            <?php
+                            $current_model = get_option('webmcp_gemini_model', 'gemini-2.0-flash');
+                            $models = array(
+                                'gemini-2.0-flash' => 'Gemini 2.0 Flash (Recomendado)',
+                                'gemini-1.5-flash' => 'Gemini 1.5 Flash',
+                                'gemini-1.5-pro' => 'Gemini 1.5 Pro',
+                            );
+                            foreach ($models as $value => $label) {
+                                echo '<option value="' . esc_attr($value) . '"' . selected($current_model, $value, false) . '>' . esc_html($label) . '</option>';
+                            }
+                            ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="webmcp_system_prompt">💬 System Prompt</label></th>
+                    <td>
+                        <textarea id="webmcp_system_prompt" name="webmcp_system_prompt" class="large-text"
+                            rows="5"><?php echo esc_textarea(get_option('webmcp_system_prompt', '')); ?></textarea>
+                        <p class="description">Instrucciones de comportamiento para el asistente IA.</p>
+                    </td>
+                </tr>
+            </table>
+
+            <?php submit_button('Guardar Configuración'); ?>
+        </form>
+
+        <?php
+        $api_key = get_option('webmcp_gemini_api_key');
+        if ($api_key): ?>
+            <hr>
+            <h2>✅ Estado</h2>
+            <p style="color: green;">API Key configurada. El endpoint de chat está activo en:</p>
+            <code><?php echo esc_url(rest_url('webmcp/v1/chat')); ?></code>
+        <?php else: ?>
+            <hr>
+            <h2>⚠️ Estado</h2>
+            <p style="color: orange;">Configurá la API Key para activar el chat con IA.</p>
+        <?php endif; ?>
+    </div>
+    <?php
+}
+
+// =============================================================================
+// WEBMCP CHAT ENDPOINT — Gemini Function Calling
+// =============================================================================
+
+add_action('rest_api_init', function () {
+    register_rest_route('webmcp/v1', '/chat', array(
+        'methods' => 'POST',
+        'callback' => 'webmcp_chat_handler',
+        'permission_callback' => '__return_true',
+        'args' => array(
+            'message' => array(
+                'required' => true,
+                'sanitize_callback' => 'sanitize_text_field',
+            ),
+        ),
+    ));
+});
+
+function webmcp_chat_handler(WP_REST_Request $request)
+{
+    $api_key = get_option('webmcp_gemini_api_key');
+    if (empty($api_key)) {
+        return new WP_Error('no_api_key', 'API Key de Gemini no configurada. Ve a Ajustes → WebMCP AI.', array('status' => 503));
+    }
+
+    $model = get_option('webmcp_gemini_model', 'gemini-2.0-flash');
+    $system_prompt = get_option('webmcp_system_prompt', 'Eres un asistente médico virtual. Ayudas a encontrar médicos disponibles.');
+    $user_message = $request->get_param('message');
+
+    // --- Tool definitions para Gemini ---
+    $tools = array(
+        array(
+            'functionDeclarations' => array(
+                array(
+                    'name' => 'buscar_medicos',
+                    'description' => 'Busca médicos disponibles en la clínica según el día de la semana y la hora específica.',
+                    'parameters' => array(
+                        'type' => 'object',
+                        'properties' => array(
+                            'dia' => array(
+                                'type' => 'string',
+                                'description' => 'Día de la semana en español (lunes, martes, miercoles, jueves, viernes, sabado)',
+                            ),
+                            'hora' => array(
+                                'type' => 'string',
+                                'description' => 'Hora en formato HH:MM (ej: 09:00, 14:30)',
+                            ),
+                        ),
+                        'required' => array('dia', 'hora'),
+                    ),
+                ),
+            ),
+        ),
+    );
+
+    // --- Primera llamada a Gemini ---
+    $gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$api_key}";
+
+    $body = array(
+        'system_instruction' => array(
+            'parts' => array(array('text' => $system_prompt)),
+        ),
+        'contents' => array(
+            array(
+                'role' => 'user',
+                'parts' => array(array('text' => $user_message)),
+            ),
+        ),
+        'tools' => $tools,
+    );
+
+    $response = wp_remote_post($gemini_url, array(
+        'headers' => array('Content-Type' => 'application/json'),
+        'body' => wp_json_encode($body),
+        'timeout' => 30,
+    ));
+
+    if (is_wp_error($response)) {
+        return new WP_Error('gemini_error', $response->get_error_message(), array('status' => 500));
+    }
+
+    $data = json_decode(wp_remote_retrieve_body($response), true);
+
+    // Verificar si Gemini quiere llamar a una tool
+    $candidate = $data['candidates'][0] ?? null;
+    if (!$candidate) {
+        return new WP_Error('gemini_no_response', 'Gemini no devolvió respuesta.', array('status' => 500));
+    }
+
+    $parts = $candidate['content']['parts'] ?? array();
+
+    // Buscar function call en las parts
+    $function_call = null;
+    foreach ($parts as $part) {
+        if (isset($part['functionCall'])) {
+            $function_call = $part['functionCall'];
+            break;
+        }
+    }
+
+    // --- Si Gemini quiere usar una tool ---
+    if ($function_call) {
+        $fn_name = $function_call['name'];
+        $fn_args = $function_call['args'] ?? array();
+
+        // Ejecutar la tool localmente
+        $tool_result = webmcp_execute_tool($fn_name, $fn_args);
+
+        // Segunda llamada a Gemini con el resultado de la tool
+        $body['contents'][] = array(
+            'role' => 'model',
+            'parts' => array(array('functionCall' => $function_call)),
+        );
+        $body['contents'][] = array(
+            'role' => 'user',
+            'parts' => array(
+                array(
+                    'functionResponse' => array(
+                        'name' => $fn_name,
+                        'response' => array('result' => $tool_result),
+                    ),
+                ),
+            ),
+        );
+
+        $response2 = wp_remote_post($gemini_url, array(
+            'headers' => array('Content-Type' => 'application/json'),
+            'body' => wp_json_encode($body),
+            'timeout' => 30,
+        ));
+
+        $data2 = json_decode(wp_remote_retrieve_body($response2), true);
+        $final_text = $data2['candidates'][0]['content']['parts'][0]['text'] ?? 'No pude procesar la respuesta.';
+
+        return rest_ensure_response(array(
+            'type' => 'tool_result',
+            'tool' => $fn_name,
+            'tool_args' => $fn_args,
+            'tool_result' => $tool_result,
+            'message' => $final_text,
+        ));
+    }
+
+    // --- Respuesta de texto directo ---
+    $text = $parts[0]['text'] ?? 'No entendí tu consulta. ¿Podés decirme qué día y horario necesitás?';
+
+    return rest_ensure_response(array(
+        'type' => 'text',
+        'message' => $text,
+    ));
+}
+
+/**
+ * Ejecuta una tool MCP localmente en PHP
+ */
+function webmcp_execute_tool(string $tool_name, array $args): array
+{
+    switch ($tool_name) {
+        case 'buscar_medicos':
+            return medical_buscar_disponibilidad(array(
+                'dia' => $args['dia'] ?? '',
+                'hora' => $args['hora'] ?? '',
+            ));
+
+        default:
+            return array('error' => "Tool '{$tool_name}' no encontrada.");
+    }
+}
