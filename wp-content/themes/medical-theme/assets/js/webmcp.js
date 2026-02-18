@@ -83,7 +83,7 @@
                     <!-- Tools will be injected here -->
                     <p style="color: #666; font-size: 13px;">No tools registered yet.</p>
                 </div>
-                <div id="webmcp-result" style="background: #282c34; color: #abb2bf; padding: 15px; font-family: monospace; font-size: 12px; white-space: pre-wrap; display: none; border-top: 1px solid #ddd;"></div>
+                <div id="webmcp-result" style="background: #282c34; color: #abb2bf; padding: 15px; font-family: monospace; font-size: 12px; white-space: pre-wrap; display: none; border-top: 1px solid #ddd; max-height: 50vh; overflow-y: auto;"></div>
             </div>
         `;
         document.body.appendChild(container);
@@ -152,28 +152,31 @@
                                 if (doctors.length === 0) {
                                     result.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">No se encontraron médicos para este horario.</div>';
                                 } else {
-                                    let cardsHtml = '<div style="display: grid; gap: 15px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">';
+                                    // Use simple flex column for better stacking in narrow panel
+                                    let cardsHtml = '<div style="display: flex; flex-direction: column; gap: 15px;">';
 
                                     doctors.forEach(doc => {
                                         cardsHtml += `
-                                            <div style="background: #fff; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; font-family: 'Poppins', sans-serif; text-align: center; padding-bottom: 20px; transition: transform 0.2s;">
-                                                <div style="position: relative; height: 280px; overflow: hidden;">
+                                            <div style="background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); overflow: hidden; font-family: 'Poppins', sans-serif; text-align: center; padding-bottom: 12px; border: 1px solid #eee;">
+                                                <div style="position: relative; height: 150px; overflow: hidden;">
                                                      <img src="${doc.foto}" alt="${doc.nombre}" style="width: 100%; height: 100%; object-fit: cover;">
-                                                     <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: #fff; color: #4353ff; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                                     <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(255,255,255,0.95); color: #4353ff; padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                                         ${doc.sede}
                                                      </div>
                                                 </div>
-                                                <div style="padding: 20px 20px 5px;">
-                                                    <h3 style="margin: 0 0 10px; color: #222; font-size: 20px; font-weight: 700;">${doc.nombre}</h3>
-                                                    <div style="color: #4353ff; font-weight: 700; font-size: 12px; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px;">
+                                                <div style="padding: 12px;">
+                                                    <h3 style="margin: 0 0 4px; color: #222; font-size: 15px; font-weight: 700;">${doc.nombre}</h3>
+                                                    <div style="color: #666; font-size: 11px; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px;">
                                                         ${doc.especialidad_texto}
                                                     </div>
-                                                    <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; font-size: 13px; color: #555; margin-bottom: 15px;">
+                                                    <div style="background: #f0f4ff; color: #4353ff; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-bottom: 10px; display: inline-block;">
                                                         🕐 ${doc.horario}
                                                     </div>
-                                                    <a href="${doc.link}" target="_blank" style="display: inline-block; padding: 10px 25px; background: #fff; color: #4353ff; border: 2px solid #f0f0f5; border-radius: 30px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                                                        Ver Perfil ➝
-                                                    </a>
+                                                    <div>
+                                                        <a href="${doc.link}" target="_blank" style="display: inline-block; padding: 6px 14px; background: #4353ff; color: #fff; border-radius: 20px; text-decoration: none; font-size: 11px; font-weight: 600; transition: opacity 0.2s;">
+                                                            Ver Perfil
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
                                         `;
@@ -183,7 +186,7 @@
                                     result.innerHTML = cardsHtml;
                                     result.style.background = '#f5f7fa'; // Lighter background for cards
                                     result.style.color = '#333';
-                                    result.style.padding = '20px';
+                                    result.style.padding = '15px';
                                 }
                             } catch (e) {
                                 result.innerText = output.content[0].text; // Fallback to raw text
