@@ -1,0 +1,34 @@
+# Ignorar todo por defecto en la raiz
+/*
+
+# No ignorar estos archivos especificos (Allowlist)
+!Dockerfile
+!init-uploads.sh
+!wp-content/
+!.gitignore
+
+# Volver a ignorar cosas especificas dentro de wp-content o generales que podrian haberse colado
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/backup-db/
+wp-content/cache/
+wp-content/**/node_modules/
+wp-content/**/dist/
+wp-content/**/.vite/
+
+# Archivos sensibles y de sistema
+.env
+.DS_Store
+*.log
+*.sql
+wp-config.php
+
+# Directorios de IDEs y Agentes
+.agent/
+.agents/
+.claude/
+.cursor/
+.trae/
+.windsurf/
+.vscode/
+.idea/

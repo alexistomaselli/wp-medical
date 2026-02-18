@@ -734,5 +734,46 @@ function medical_register_acf_fields()
             ),
         ),
     ));
+
+    // Página de Opciones
+    if (function_exists('acf_add_options_page')) {
+        acf_add_options_page(array(
+            'page_title' => 'Configuración del Tema',
+            'menu_title' => 'Tema Opciones',
+            'menu_slug' => 'theme-general-settings',
+            'capability' => 'edit_posts',
+            'redirect' => false
+        ));
+    }
+
+    // Campos de Opciones
+    acf_add_local_field_group(array(
+        'key' => 'group_theme_options',
+        'title' => 'Opciones del Tema',
+        'fields' => array(
+            array(
+                'key' => 'field_video_promocional',
+                'label' => 'Video Promocional (Home)',
+                'name' => 'video_promocional',
+                'type' => 'file',
+                'instructions' => 'Sube el video promocional que se mostrará en el modal de la página de inicio.',
+                'required' => 0,
+                'return_format' => 'url', // Just URL is enough for video tag
+                'library' => 'all',
+                'min_size' => 0,
+                'max_size' => 50, // MB
+                'mime_types' => 'mp4,webm',
+            ),
+        ),
+        'location' => array(
+            array(
+                array(
+                    'param' => 'options_page',
+                    'operator' => '==',
+                    'value' => 'theme-general-settings',
+                ),
+            ),
+        ),
+    ));
 }
 add_action('acf/init', 'medical_register_acf_fields');
