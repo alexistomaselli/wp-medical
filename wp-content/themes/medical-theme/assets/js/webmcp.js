@@ -158,8 +158,7 @@
                                     doctors.forEach(doc => {
                                         cardsHtml += `
                                             <div style="display: flex; align-items: center; background: #fff; border-radius: 16px; box-shadow: 0 4px 12px rgba(97, 94, 252, 0.08); padding: 12px; border: 1px solid #f0f0f5; gap: 12px; transition: transform 0.2s;">
-                                                <div style="flex-shrink: 0; width: 60px; height: 60px; border-radius: 50%; overflow: hidden; border: 1px solid #f0f0f5; background-color: #f9f9fb;">
-                                                     <img src="${doc.foto}" alt="${doc.nombre}" style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                                                <div style="flex-shrink: 0; width: 60px; height: 60px; border-radius: 50%; overflow: hidden; border: 1px solid #f0f0f5; background-color: #f9f9fb; background-image: url('${doc.foto}'); background-size: cover; background-position: center top; background-repeat: no-repeat;">
                                                 </div>
                                                 <div style="flex: 1; min-width: 0; text-align: left;">
                                                     <h3 style="margin: 0 0 2px; color: #2E2E2E; font-size: 14px; font-weight: 700; line-height: 1.2;">${doc.nombre}</h3>
