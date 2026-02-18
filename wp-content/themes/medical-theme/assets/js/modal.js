@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Botón play para video nativo ─────────────────────────────────────────
     if (playBtn && video) {
         playBtn.addEventListener('click', function () {
-            video.play();
+            video.play().catch(() => { }); // silenciar error si el navegador bloquea
         });
         video.addEventListener('play', () => playBtn.classList.add('is-hidden'));
         video.addEventListener('pause', () => playBtn.classList.remove('is-hidden'));
@@ -25,12 +25,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (video) {
             video.currentTime = 0;
-            video.play();
+            // Solo reproducir si hay interacción real del usuario (e existe)
+            if (e) {
+                video.play().catch(() => { });
+            }
         }
 
         // Cargar iframe solo al abrir (evita autoplay antes de tiempo)
-        if (iframe && !iframe.src) {
-            iframe.src = iframe.dataset.src;
+        if (iframe) {
+            const baseSrc = iframe.dataset.src || '';
+            // Añadir autoplay=1 solo si fue abierto por el usuario (e existe)
+            iframe.src = e ? baseSrc + (baseSrc.includes('?') ? '&' : '?') + 'autoplay=1' : baseSrc;
         }
     }
 
@@ -41,6 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (video) {
             video.pause();
+            video.currentTime = 0;
         }
 
         // Detener iframe vaciando el src (pausa YouTube/Vimeo)
@@ -49,18 +55,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // ── Autoplay behavior ────────────────────────────────────────────────────
+    // ── Autoplay behavior (solo si el navegador lo permite) ──────────────────
     const autoplayBehavior = videoModal.getAttribute('data-autoplay');
     if (autoplayBehavior === 'always') {
-        openModal();
+        // Pequeño delay para que el DOM esté listo, pero NO forzar play
+        // (el navegador lo bloqueará de todas formas sin interacción)
+        setTimeout(() => openModal(null), 500);
     } else if (autoplayBehavior === 'once') {
         if (!localStorage.getItem('medical_video_seen')) {
-            openModal();
+            setTimeout(() => openModal(null), 500);
             localStorage.setItem('medical_video_seen', 'true');
         }
     }
 
-    // ── Triggers ─────────────────────────────────────────────────────────────
+    // ── Triggers (click del usuario = interacción real) ──────────────────────
     document.querySelectorAll('.js-open-video-modal').forEach(btn => {
         btn.addEventListener('click', openModal);
     });
