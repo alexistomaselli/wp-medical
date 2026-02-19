@@ -186,7 +186,12 @@ add_action('pre_get_posts', 'medical_medico_archive_filter');
 /**
  * WooCommerce Customizations
  */
-if (class_exists('WooCommerce')) {
+function medical_init_woocommerce()
+{
+    if (!class_exists('WooCommerce')) {
+        return;
+    }
+
 
     // Customize Checkout Layout for AJAX
     // Note: These actions modify visual layout hooks. 
@@ -219,72 +224,64 @@ if (class_exists('WooCommerce')) {
         $fields['billing']['billing_first_name']['label'] = __('Nombre', 'medical-theme');
         $fields['billing']['billing_last_name']['label'] = __('Apellidos', 'medical-theme');
         $fields['billing']['billing_company']['label'] = __('Nombre de la empresa (opcional)', 'medical-theme');
-        $fields['billing']['billing_country']['label'] = __('País / Región', 'medical-theme');
-        $fields['billing']['billing_address_1']['label'] = __('Dirección de la calle', 'medical-theme');
-        $fields['billing']['billing_address_2']['label'] = __('Apartamento, habitación, etc. (opcional)', 'medical-theme');
-        $fields['billing']['billing_city']['label'] = __('Localidad / Ciudad', 'medical-theme');
-        $fields['billing']['billing_state']['label'] = __('Provincia', 'medical-theme');
-        $fields['billing']['billing_postcode']['label'] = __('Código postal', 'medical-theme');
-        $fields['billing']['billing_phone']['label'] = __('Teléfono', 'medical-theme');
-        $fields['billing']['billing_email']['label'] = __('Dirección de correo electrónico', 'medical-theme');
-
-        // Placeholders
-        $fields['billing']['billing_first_name']['placeholder'] = '';
-        $fields['billing']['billing_last_name']['placeholder'] = '';
-        $fields['billing']['billing_address_1']['placeholder'] = __('Número de la casa y nombre de la calle', 'medical-theme');
-        $fields['billing']['billing_address_2']['placeholder'] = __('Apartamento, habitación, unidad, etc. (opcional)', 'medical-theme');
-
-        // Priorities
-        $fields['billing']['billing_first_name']['priority'] = 10;
-        $fields['billing']['billing_last_name']['priority'] = 20;
-        $fields['billing']['billing_address_1']['priority'] = 30;
-        $fields['billing']['billing_city']['priority'] = 40;
-        $fields['billing']['billing_postcode']['priority'] = 50;
-        $fields['billing']['billing_phone']['priority'] = 60;
-        $fields['billing']['billing_email']['priority'] = 70;
-
-        // Custom Patient Information Fields
+        // Add Patient Specific Fields
         $fields['billing']['billing_patient_name'] = array(
-            'label' => __('Nombre Completo del Paciente', 'medical-theme'),
-            'placeholder' => __('Ingrese el nombre completo del paciente', 'medical-theme'),
+            'label' => __('Nombre del Paciente', 'medical-theme'),
+            'placeholder' => _x('Juan Pérez', 'placeholder', 'medical-theme'),
             'required' => true,
             'class' => array('form-row-wide'),
             'clear' => true,
-            'priority' => 100
-        );
-
-        $fields['billing']['billing_patient_dob'] = array(
-            'label' => __('Fecha de Nacimiento', 'medical-theme'),
-            'placeholder' => __('AAAA-MM-DD', 'medical-theme'),
-            'type' => 'date',
-            'required' => true,
-            'class' => array('form-row-first'),
-            'clear' => false,
-            'priority' => 110
-        );
-
-        $fields['billing']['billing_patient_gender'] = array(
-            'label' => __('Género', 'medical-theme'),
-            'type' => 'select',
-            'required' => true,
-            'class' => array('form-row-last'),
-            'options' => array(
-                '' => __('Seleccionar género', 'medical-theme'),
-                'male' => __('Masculino', 'medical-theme'),
-                'female' => __('Femenino', 'medical-theme'),
-                'other' => __('Otro', 'medical-theme')
-            ),
-            'priority' => 120
+            'priority' => 5
         );
 
         $fields['billing']['billing_dni'] = array(
             'label' => __('DNI del Paciente', 'medical-theme'),
-            'placeholder' => _x('Ingrese el DNI para la historia clínica', 'placeholder', 'medical-theme'),
+            'placeholder' => _x('12.345.678', 'placeholder', 'medical-theme'),
             'required' => true,
-            'class' => array('form-row-wide'),
-            'clear' => true,
-            'priority' => 130
+            'class' => array('form-row-first'),
+            'clear' => false,
+            'priority' => 7
         );
+
+        $fields['billing']['billing_patient_dob'] = array(
+            'label' => __('Fecha de Nacimiento', 'medical-theme'),
+            'placeholder' => _x('DD/MM/AAAA', 'placeholder', 'medical-theme'),
+            'required' => false,
+            'class' => array('form-row-last'),
+            'clear' => true,
+            'priority' => 8
+        );
+
+        $fields['billing']['billing_patient_gender'] = array(
+            'type' => 'select',
+            'label' => __('Género', 'medical-theme'),
+            'required' => false,
+            'class' => array('form-row-wide'),
+            'options' => array(
+                '' => __('Seleccionar...', 'medical-theme'),
+                'male' => __('Masculino', 'medical-theme'),
+                'female' => __('Femenino', 'medical-theme'),
+                'other' => __('Otro', 'medical-theme')
+            ),
+            'priority' => 9
+        );
+
+        // Reorder standard fields
+        $fields['billing']['billing_first_name']['priority'] = 10;
+        $fields['billing']['billing_last_name']['priority'] = 20;
+        $fields['billing']['billing_email']['priority'] = 30;
+        $fields['billing']['billing_phone']['priority'] = 40;
+
+        // Hide unnecessary fields for a medical clinic
+        unset($fields['billing']['billing_company']);
+        unset($fields['billing']['billing_address_1']);
+        unset($fields['billing']['billing_address_2']);
+        unset($fields['billing']['billing_city']);
+        unset($fields['billing']['billing_postcode']);
+        unset($fields['billing']['billing_country']);
+        unset($fields['billing']['billing_state']);
+        unset($fields['shipping']);
+        unset($fields['order']['order_comments']);
 
         return $fields;
     }
@@ -448,16 +445,16 @@ if (class_exists('WooCommerce')) {
     function medical_save_booking_to_order($item, $cart_item_key, $values, $order)
     {
         if (isset($values['booking_date'])) {
-            $item->add_meta_data('_booking_date', $values['booking_date']);
+            $item->add_meta_data(__('Fecha de Cita', 'medical-theme'), $values['booking_date']);
         }
         if (isset($values['booking_time'])) {
-            $item->add_meta_data('Horario', $values['booking_time']);
+            $item->add_meta_data(__('Hora de Cita', 'medical-theme'), $values['booking_time']);
         }
         if (isset($values['patient_name'])) {
-            $item->add_meta_data('Paciente', $values['patient_name']);
+            $item->add_meta_data(__('Paciente', 'medical-theme'), $values['patient_name']);
         }
-        if (isset($values['patient_email'])) {
-            $item->add_meta_data('Email Paciente', $values['patient_email']);
+        if (isset($values['patient_dni'])) {
+            $item->add_meta_data(__('DNI Paciente', 'medical-theme'), $values['patient_dni']);
         }
         if (isset($values['patient_phone'])) {
             $item->add_meta_data('_patient_phone', $values['patient_phone']);
@@ -470,6 +467,7 @@ if (class_exists('WooCommerce')) {
         }
     }
 }
+add_action('plugins_loaded', 'medical_init_woocommerce');
 
 /**
  * === CORE DATA STRUCTURES (CPTs & Taxonomies) ===
@@ -940,27 +938,27 @@ function medical_horarios_meta_box_render($post)
     ob_start();
     ?>
     <script id="mh-row-template" type="text/template">
-                            <tr class="mh-row">
-                                <td>
-                                    <select name="horarios_atencion[__IDX__][dia]">
-                                        <?php foreach ($dias as $val => $label): ?>
-                                                                <option value="<?php echo esc_attr($val); ?>"><?php echo esc_html($label); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </td>
-                                <td><input type="time" name="horarios_atencion[__IDX__][hora_inicio]" value="09:00"></td>
-                                <td><input type="time" name="horarios_atencion[__IDX__][hora_fin]" value="17:00"></td>
-                                <td>
-                                    <select name="horarios_atencion[__IDX__][sede]">
-                                        <option value="">— Sin sede —</option>
-                                        <?php foreach ($sedes as $sede): ?>
-                                                                <option value="<?php echo $sede->ID; ?>"><?php echo esc_html($sede->post_title); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </td>
-                                <td><button type="button" class="mh-btn-remove" onclick="mhRemoveRow(this)">✕</button></td>
-                            </tr>
-                        </script>
+                                    <tr class="mh-row">
+                                        <td>
+                                            <select name="horarios_atencion[__IDX__][dia]">
+                                            <?php foreach ($dias as $val => $label): ?>
+                                                                                <option value="<?php echo esc_attr($val); ?>"><?php echo esc_html($label); ?></option>
+                                            <?php endforeach; ?>
+                                            </select>
+                                        </td>
+                                        <td><input type="time" name="horarios_atencion[__IDX__][hora_inicio]" value="09:00"></td>
+                                        <td><input type="time" name="horarios_atencion[__IDX__][hora_fin]" value="17:00"></td>
+                                        <td>
+                                            <select name="horarios_atencion[__IDX__][sede]">
+                                                <option value="">— Sin sede —</option>
+                                            <?php foreach ($sedes as $sede): ?>
+                                                                                <option value="<?php echo $sede->ID; ?>"><?php echo esc_html($sede->post_title); ?></option>
+                                            <?php endforeach; ?>
+                                            </select>
+                                        </td>
+                                        <td><button type="button" class="mh-btn-remove" onclick="mhRemoveRow(this)">✕</button></td>
+                                    </tr>
+                                </script>
     <script>
         (function () {
             var rowIndex = <?php echo max(count($horarios), 0); ?>;
