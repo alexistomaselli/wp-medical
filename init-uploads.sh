@@ -27,5 +27,29 @@ if [ -d "/usr/src/user_wp_content" ]; then
     chown -R www-data:www-data /var/www/html/wp-content
 fi
 
+echo "Aplicando reglas de seguridad (Hardening)..."
+# Bloquear listados de directorios y acceso a archivos sensibles en wp-content
+cat << 'EOF' > /var/www/html/wp-content/.htaccess
+Options -Indexes
+<FilesMatch "\.(sql|log|sh|env|bak)$">
+    Require all denied
+</FilesMatch>
+EOF
+
+# Bloquear ejecución de PHP en el directorio de subidas (Uploads)
+mkdir -p /var/www/html/wp-content/uploads
+cat << 'EOF' > /var/www/html/wp-content/uploads/.htaccess
+<FilesMatch "\.ph(p[3-8]?|t|tml)$">
+    Require all denied
+</FilesMatch>
+EOF
+
+# Desactivar edición de archivos de plugins y themes desde el panel de WP
+if [ -f "/var/www/html/wp-config.php" ]; then
+    if ! grep -q "DISALLOW_FILE_EDIT" /var/www/html/wp-config.php; then
+        sed -i "/table_prefix/a define('DISALLOW_FILE_EDIT', true);" /var/www/html/wp-config.php
+    fi
+fi
+
 # Ejecutar el entrypoint original de WordPress
 exec docker-entrypoint.sh "$@"
