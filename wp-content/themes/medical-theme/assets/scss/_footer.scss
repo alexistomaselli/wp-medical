@@ -33,15 +33,13 @@
     gap: 10px;
     margin-bottom: 20px;
 
-    .logo-icon {
-        font-size: 24px;
-    }
+    .footer-main-logo {
+        height: 60px;
+        width: auto;
 
-    .logo-text {
-        font-family: $font-heading;
-        font-size: 22px;
-        font-weight: 700;
-        color: $primary-color;
+        @include respond-to(tablet) {
+            height: 50px;
+        }
     }
 }
 

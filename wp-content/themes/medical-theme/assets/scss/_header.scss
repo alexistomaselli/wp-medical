@@ -41,6 +41,16 @@ body.menu-open {
         }
     }
 
+    .main-logo {
+        height: 60px;
+        width: auto;
+
+        @include respond-to(tablet) {
+            height: 70px;
+        }
+    }
+
+
     .logo-icon {
         position: relative;
         width: 40px;

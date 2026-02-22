@@ -4,8 +4,8 @@
             <!-- Column 1: Brand Info -->
             <div class="footer-col footer-brand">
                 <div class="footer-logo">
-                    <span class="logo-icon">🏥</span>
-                    <span class="logo-text">Medical</span>
+                    <img src="<?php echo get_template_directory_uri(); ?>/assets/images/logo-horizontal-footer-3.png"
+                        alt="<?php bloginfo('name'); ?>" class="footer-main-logo">
                 </div>
                 <p class="footer-tagline">Tecnología médica avanzada con un enfoque humano. Cuidamos lo que más importa.
                 </p>
