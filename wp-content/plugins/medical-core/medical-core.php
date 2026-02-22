@@ -46,6 +46,20 @@ add_action('template_redirect', function () {
     }
 }, 1);
 
+// 4. Bloquear pingbacks y trackbacks para evitar ataques DDoS reflectivos
+add_filter('pings_open', '__return_false', 10, 2);
+add_filter('pre_update_option_default_ping_status', '__return_false');
+add_action('init', function () {
+    // Si la petición va directa al viejo archivo, matar el proceso devolviendo un estado 403.
+    if (isset($_SERVER['SCRIPT_FILENAME']) && basename($_SERVER['SCRIPT_FILENAME']) === 'wp-trackback.php') {
+        header('HTTP/1.1 403 Forbidden');
+        header('Status: 403 Forbidden');
+        die('Prohibido - Trackbacks inactivos.');
+    }
+    // Remover la cabecera X-Pingback que devela existencia de la funcionalidad
+    remove_action('wp_head', 'pingback_link');
+}, 1);
+
 /**
  * Check for ACF and show admin notice if missing, and fallback
  */
@@ -973,27 +987,27 @@ function medical_horarios_meta_box_render($post)
     ob_start();
     ?>
     <script id="mh-row-template" type="text/template">
-                                                <tr class="mh-row">
-                                                    <td>
-                                                        <select name="horarios_atencion[__IDX__][dia]">
-                                                        <?php foreach ($dias as $val => $label): ?>
-                                                                                                        <option value="<?php echo esc_attr($val); ?>"><?php echo esc_html($label); ?></option>
-                                                        <?php endforeach; ?>
-                                                        </select>
-                                                    </td>
-                                                    <td><input type="time" name="horarios_atencion[__IDX__][hora_inicio]" value="09:00"></td>
-                                                    <td><input type="time" name="horarios_atencion[__IDX__][hora_fin]" value="17:00"></td>
-                                                    <td>
-                                                        <select name="horarios_atencion[__IDX__][sede]">
-                                                            <option value="">— Sin sede —</option>
-                                                        <?php foreach ($sedes as $sede): ?>
-                                                                                                        <option value="<?php echo $sede->ID; ?>"><?php echo esc_html($sede->post_title); ?></option>
-                                                        <?php endforeach; ?>
-                                                        </select>
-                                                    </td>
-                                                    <td><button type="button" class="mh-btn-remove" onclick="mhRemoveRow(this)">✕</button></td>
-                                                </tr>
-                                            </script>
+                                                    <tr class="mh-row">
+                                                        <td>
+                                                            <select name="horarios_atencion[__IDX__][dia]">
+                                                            <?php foreach ($dias as $val => $label): ?>
+                                                                                                                <option value="<?php echo esc_attr($val); ?>"><?php echo esc_html($label); ?></option>
+                                                            <?php endforeach; ?>
+                                                            </select>
+                                                        </td>
+                                                        <td><input type="time" name="horarios_atencion[__IDX__][hora_inicio]" value="09:00"></td>
+                                                        <td><input type="time" name="horarios_atencion[__IDX__][hora_fin]" value="17:00"></td>
+                                                        <td>
+                                                            <select name="horarios_atencion[__IDX__][sede]">
+                                                                <option value="">— Sin sede —</option>
+                                                            <?php foreach ($sedes as $sede): ?>
+                                                                                                                <option value="<?php echo $sede->ID; ?>"><?php echo esc_html($sede->post_title); ?></option>
+                                                            <?php endforeach; ?>
+                                                            </select>
+                                                        </td>
+                                                        <td><button type="button" class="mh-btn-remove" onclick="mhRemoveRow(this)">✕</button></td>
+                                                    </tr>
+                                                </script>
     <script>
         (function () {
             var rowIndex = <?php echo max(count($horarios), 0); ?>;
